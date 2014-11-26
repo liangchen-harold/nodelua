@@ -7,6 +7,11 @@
 #ifndef portesp_h
 #define portesp_h
 
-void __fputs(const char *str, int fd);
+#include <stdio.h>
+
+char *__fgets(const char *buf, int num, FILE *fd);
+void __fputs(const char *str, FILE *fd);
+double __strtod(const char* str, char** endptr);
+void __tiny_fload_to_string(char *buf, const char *fmt, float val);
 
 #endif

@@ -7,172 +7,176 @@
 
 #include <errno.h>
 #include <sys/time.h>
+#include <math.h>
 
-void __fputs(const char *str, int fd)
+#include "lua/lua.h"
+
+double ICACHE_FLASH_ATTR __strtod(const char* str, char** endptr)
+{
+    os_printf("__strtod: %s\n", str);
+    return strtol(str, endptr);
+}
+char * ICACHE_FLASH_ATTR __fgets(const char *buf, int num, FILE *fd)
+{
+
+}
+void ICACHE_FLASH_ATTR __fputs(const char *str, FILE *fd)
 {
     os_printf("%s", str);
 }
+void ICACHE_FLASH_ATTR __tiny_fload_to_string(char *buf, const char *fmt, float val)
+{
+    os_sprintf(buf, "%d", (int)val);
+    // char * dtoa(char *s, double n);
+    //
+    // dtoa(buf, val);
+}
 
-double pow(double a, double b)
+
+
+
+
+
+double ICACHE_FLASH_ATTR pow(double a, double b)
 {
     return 0;
 }
 
-double floor(double a)
+double ICACHE_FLASH_ATTR floor(double a)
 {
     return 0;
 }
 
-double ceil(double a)
+double ICACHE_FLASH_ATTR ceil(double a)
 {
     return 0;
 }
 
-double sin(double a)
+double ICACHE_FLASH_ATTR sin(double a)
 {
     return 0;
 }
 
-double asin(double a)
+double ICACHE_FLASH_ATTR asin(double a)
 {
     return 0;
 }
 
-double sinh(double a)
+double ICACHE_FLASH_ATTR sinh(double a)
 {
     return 0;
 }
 
-double cos(double a)
+double ICACHE_FLASH_ATTR cos(double a)
 {
     return 0;
 }
 
-double acos(double a)
+double ICACHE_FLASH_ATTR acos(double a)
 {
     return 0;
 }
 
-double cosh(double a)
+double ICACHE_FLASH_ATTR cosh(double a)
 {
     return 0;
 }
 
-double atan(double a)
+double ICACHE_FLASH_ATTR atan(double a)
 {
     return 0;
 }
 
-double atan2(double a, double b)
+double ICACHE_FLASH_ATTR atan2(double a, double b)
 {
     return 0;
 }
 
-double tan(double a)
+double ICACHE_FLASH_ATTR tan(double a)
 {
     return 0;
 }
 
-double tanh(double a)
+double ICACHE_FLASH_ATTR tanh(double a)
 {
     return 0;
 }
 
-double log(double a)
+double ICACHE_FLASH_ATTR exp(double a)
 {
     return 0;
 }
 
-double log10(double a)
+double ICACHE_FLASH_ATTR fmod(double a, double b)
 {
     return 0;
 }
 
-double sqrt(double a)
-{
-    return 0;
-}
-
-double exp(double a)
-{
-    return 0;
-}
-
-double fmod(double a, double b)
-{
-    return 0;
-}
-
-int _rename_r(const char *filename, const char *to)
+int ICACHE_FLASH_ATTR _unlink_r(const char *filename)
 {
     return -1;
 }
 
-int _unlink_r(const char *filename)
-{
-    return -1;
-}
-
-void _exit(int status)
+void ICACHE_FLASH_ATTR _exit(int status)
 {
     while(1);
 }
 
-int _open_r(const char *filename)
+int ICACHE_FLASH_ATTR _open_r(const char *filename)
 {
     return -1;
 }
 
-int _close_r(int fd)
+int ICACHE_FLASH_ATTR _close_r(int fd)
 {
     return -1;
 }
 
-int _read_r(int fd)
+int ICACHE_FLASH_ATTR _read_r(int fd)
 {
     return -1;
 }
 
-int _write_r(int fd)
+int ICACHE_FLASH_ATTR _write_r(int fd)
 {
     return -1;
 }
 
-int _lseek_r(int fd)
+int ICACHE_FLASH_ATTR _lseek_r(int fd)
 {
     return -1;
 }
 
-int _fstat_r(int fd)
+int ICACHE_FLASH_ATTR _fstat_r(int fd)
 {
     return -1;
 }
 
-long _times_r()
+long ICACHE_FLASH_ATTR _times_r()
 {
     return 0;
 }
 
-int _gettimeofday_r(struct timeval *tv, struct timezone *tz)
+int ICACHE_FLASH_ATTR _gettimeofday_r(struct timeval *tv, struct timezone *tz)
 {
     return -1;
 }
 
-int _getpid_r()
+int ICACHE_FLASH_ATTR _getpid_r()
 {
     return -1;
 }
 
-int _kill_r(int pid)
+int ICACHE_FLASH_ATTR _kill_r(int pid)
 {
     return -1;
 }
 
-char *getenv(const char *key)
+char *ICACHE_FLASH_ATTR getenv(const char *key)
 {
     return 0;
 }
 
-int _sbrk_r(int size)
+int ICACHE_FLASH_ATTR _sbrk_r(int size)
 {
 }

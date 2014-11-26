@@ -36,23 +36,23 @@ static int ICACHE_FLASH_ATTR os_pushresult (lua_State *L, int i, const char *fil
 }
 
 
-static int os_execute (lua_State *L) {
-  lua_pushinteger(L, system(luaL_optstring(L, 1, NULL)));
-  return 1;
-}
-
-
-static int os_remove (lua_State *L) {
-  const char *filename = luaL_checkstring(L, 1);
-  return os_pushresult(L, remove(filename) == 0, filename);
-}
-
-
-static int os_rename (lua_State *L) {
-  const char *fromname = luaL_checkstring(L, 1);
-  const char *toname = luaL_checkstring(L, 2);
-  return os_pushresult(L, rename(fromname, toname) == 0, fromname);
-}
+// static int os_execute (lua_State *L) {
+//   lua_pushinteger(L, system(luaL_optstring(L, 1, NULL)));
+//   return 1;
+// }
+//
+//
+// static int os_remove (lua_State *L) {
+//   const char *filename = luaL_checkstring(L, 1);
+//   return os_pushresult(L, remove(filename) == 0, filename);
+// }
+//
+//
+// static int os_rename (lua_State *L) {
+//   const char *fromname = luaL_checkstring(L, 1);
+//   const char *toname = luaL_checkstring(L, 2);
+//   return os_pushresult(L, rename(fromname, toname) == 0, fromname);
+// }
 
 
 static int ICACHE_FLASH_ATTR os_tmpname (lua_State *L) {
@@ -66,10 +66,10 @@ static int ICACHE_FLASH_ATTR os_tmpname (lua_State *L) {
 }
 
 
-static int os_getenv (lua_State *L) {
-  lua_pushstring(L, getenv(luaL_checkstring(L, 1)));  /* if NULL push nil */
-  return 1;
-}
+// static int os_getenv (lua_State *L) {
+//   lua_pushstring(L, getenv(luaL_checkstring(L, 1)));  /* if NULL push nil */
+//   return 1;
+// }
 
 
 static int os_clock (lua_State *L) {
@@ -214,19 +214,19 @@ static int ICACHE_FLASH_ATTR os_setlocale (lua_State *L) {
 }
 
 
-static int os_exit (lua_State *L) {
-  //exit(luaL_optint(L, 1, EXIT_SUCCESS));
-}
+// static int os_exit (lua_State *L) {
+//   exit(luaL_optint(L, 1, EXIT_SUCCESS));
+// }
 
 static const luaL_Reg syslib[] = {
   {"clock",     os_clock},
   {"date",      os_date},
   {"difftime",  os_difftime},
-  {"execute",   os_execute},
-  {"exit",      os_exit},
-  {"getenv",    os_getenv},
-  {"remove",    os_remove},
-  {"rename",    os_rename},
+//  {"execute",   os_execute},
+//  {"exit",      os_exit},
+//  {"getenv",    os_getenv},
+//  {"remove",    os_remove},
+//  {"rename",    os_rename},
   {"setlocale", os_setlocale},
   {"time",      os_time},
   {"tmpname",   os_tmpname},

@@ -11,6 +11,7 @@
 #include <limits.h>
 #include <stddef.h>
 #include <osapi.h>
+#include "portesp.h"
 
 
 /*
@@ -283,7 +284,7 @@
 #else
 #define lua_readline(L,b,p)	\
 	((void)L, __fputs(p, stdout), fflush(stdout),  /* show prompt */ \
-	fgets(b, LUA_MAXINPUT, stdin) != NULL)  /* get line */
+	__fgets(b, LUA_MAXINPUT, stdin) != NULL)  /* get line */
 #define lua_saveline(L,idx)	{ (void)L; (void)idx; }
 #define lua_freeline(L,b)	{ (void)L; (void)b; }
 #endif
@@ -521,10 +522,9 @@
 */
 #define LUA_NUMBER_SCAN		"%lf"
 #define LUA_NUMBER_FMT		"%.14g"
-#define lua_number2str(s,n)	os_sprintf((s), LUA_NUMBER_FMT, (n))
+#define lua_number2str(s,n)	__tiny_fload_to_string((s), LUA_NUMBER_FMT, (n))
 #define LUAI_MAXNUMBER2STR	32 /* 16 digits, sign, point, and \0 */
-#define lua_str2number(s,p)	1,((s), (p))
-//TODO: xxx by lcsky for size limit...
+#define lua_str2number(s,p)	__strtod((s),(p))
 
 
 /*

@@ -625,27 +625,36 @@ LUALIB_API int (luaL_loadstring) (lua_State *L, const char *s) {
 
 /* }====================================================== */
 
-
+#define min(a,b) ( (a)<(b)?(a):(b) )
 static void * ICACHE_FLASH_ATTR l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
   (void)ud;
   (void)osize;
   if (nsize == 0) {
-    os_free(ptr);
+	if (ptr != NULL)
+	{
+		os_free((uint32_t)ptr-sizeof(size_t));
+	}
     return NULL;
   }
   else
   {
     if (ptr != NULL)
 	{
-		void *new_ptr = (void*)os_malloc(nsize);
-		//os_memcpy()
-		os_printf("realloc!!!\n");
-		os_free(ptr);
-		return new_ptr;
+		if (*(size_t*)((uint32_t)ptr-sizeof(size_t)) == nsize)
+		{
+			return ptr;
+		}
+		void *new_ptr = (void*)os_malloc((uint32_t)nsize+sizeof(size_t));
+		*(size_t*)new_ptr = nsize;
+		os_memcpy((uint32_t)new_ptr+sizeof(size_t), ptr, min( nsize, *(size_t*)((uint32_t)ptr-sizeof(size_t)) ));
+		os_free((uint32_t)ptr-sizeof(size_t));
+		return (void*)((uint32_t)new_ptr+sizeof(size_t));
 	}
 	else
 	{
-		return (void*)os_malloc(nsize);
+		void *new_ptr = (void*)os_malloc(nsize+sizeof(size_t));
+		*(size_t*)new_ptr = nsize;
+		return (void*)((uint32_t)new_ptr+sizeof(size_t));
 	}
   }
 }

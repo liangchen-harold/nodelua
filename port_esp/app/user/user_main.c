@@ -9,6 +9,7 @@
  *     2014/1/1, v1.0 create this file.
 *******************************************************************************/
 #include "ets_sys.h"
+#include <osapi.h>
 #include "driver/uart.h"
 //#include "lua/lua.h"
 //#include "lua/luaconf.h"
@@ -48,16 +49,19 @@ void ICACHE_FLASH_ATTR user_init(void)
 	int i;
     // rom use 74880 baut_rate, here reinitialize
     uart_init(BIT_RATE_115200, BIT_RATE_115200);
+
 	os_printf("SDK version:%d.%d.%d\n", SDK_VERSION_MAJOR, SDK_VERSION_MINOR, SDK_VERSION_REVISION);
-	//for(i = 0; 1; i ++)
+
+	uint32 buf[256];
+	SpiFlashOpResult succ = spi_flash_read(0x3c000, buf, sizeof(buf));
+	os_printf("load %s: %s", succ == SPI_FLASH_RESULT_OK? "succ" : "fail", (char*)buf);
+
+	int luamain (int argc, char **argv);
+	char *argv[] = {"lua", "-e", (char*)buf};
+	for(i = 0; 1; i ++)
 	{
 		uint16_t val = system_adc_read();
 		os_printf("adc=%d\n", val);
-	}
-	int luamain (int argc, char **argv);
-	char *argv[] = {"lua", "-e", "print('OK!')"};
-	for(i = 0; 1; i ++)
-	{
 		luamain(3, argv);
 	}
 	//ceil(luaL_checknumber(NULL, 1));
