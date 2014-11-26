@@ -9,11 +9,11 @@
 #define ldump_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "lua/lua.h"
 
-#include "lobject.h"
-#include "lstate.h"
-#include "lundump.h"
+#include "lua/lobject.h"
+#include "lua/lstate.h"
+#include "lua/lundump.h"
 
 typedef struct {
  lua_State* L;
@@ -26,7 +26,7 @@ typedef struct {
 #define DumpMem(b,n,size,D)	DumpBlock(b,(n)*(size),D)
 #define DumpVar(x,D)	 	DumpMem(&x,1,sizeof(x),D)
 
-static void DumpBlock(const void* b, size_t size, DumpState* D)
+static void ICACHE_FLASH_ATTR DumpBlock(const void* b, size_t size, DumpState* D)
 {
  if (D->status==0)
  {
@@ -36,29 +36,29 @@ static void DumpBlock(const void* b, size_t size, DumpState* D)
  }
 }
 
-static void DumpChar(int y, DumpState* D)
+static void ICACHE_FLASH_ATTR DumpChar(int y, DumpState* D)
 {
  char x=(char)y;
  DumpVar(x,D);
 }
 
-static void DumpInt(int x, DumpState* D)
+static void ICACHE_FLASH_ATTR DumpInt(int x, DumpState* D)
 {
  DumpVar(x,D);
 }
 
-static void DumpNumber(lua_Number x, DumpState* D)
+static void ICACHE_FLASH_ATTR DumpNumber(lua_Number x, DumpState* D)
 {
  DumpVar(x,D);
 }
 
-static void DumpVector(const void* b, int n, size_t size, DumpState* D)
+static void ICACHE_FLASH_ATTR DumpVector(const void* b, int n, size_t size, DumpState* D)
 {
  DumpInt(n,D);
  DumpMem(b,n,size,D);
 }
 
-static void DumpString(const TString* s, DumpState* D)
+static void ICACHE_FLASH_ATTR DumpString(const TString* s, DumpState* D)
 {
  if (s==NULL || getstr(s)==NULL)
  {
@@ -77,7 +77,7 @@ static void DumpString(const TString* s, DumpState* D)
 
 static void DumpFunction(const Proto* f, const TString* p, DumpState* D);
 
-static void DumpConstants(const Proto* f, DumpState* D)
+static void ICACHE_FLASH_ATTR DumpConstants(const Proto* f, DumpState* D)
 {
  int i,n=f->sizek;
  DumpInt(n,D);
@@ -108,7 +108,7 @@ static void DumpConstants(const Proto* f, DumpState* D)
  for (i=0; i<n; i++) DumpFunction(f->p[i],f->source,D);
 }
 
-static void DumpDebug(const Proto* f, DumpState* D)
+static void ICACHE_FLASH_ATTR DumpDebug(const Proto* f, DumpState* D)
 {
  int i,n;
  n= (D->strip) ? 0 : f->sizelineinfo;
@@ -126,7 +126,7 @@ static void DumpDebug(const Proto* f, DumpState* D)
  for (i=0; i<n; i++) DumpString(f->upvalues[i],D);
 }
 
-static void DumpFunction(const Proto* f, const TString* p, DumpState* D)
+static void ICACHE_FLASH_ATTR DumpFunction(const Proto* f, const TString* p, DumpState* D)
 {
  DumpString((f->source==p || D->strip) ? NULL : f->source,D);
  DumpInt(f->linedefined,D);
@@ -140,7 +140,7 @@ static void DumpFunction(const Proto* f, const TString* p, DumpState* D)
  DumpDebug(f,D);
 }
 
-static void DumpHeader(DumpState* D)
+static void ICACHE_FLASH_ATTR DumpHeader(DumpState* D)
 {
  char h[LUAC_HEADERSIZE];
  luaU_header(h);
@@ -150,7 +150,7 @@ static void DumpHeader(DumpState* D)
 /*
 ** dump Lua function as precompiled chunk
 */
-int luaU_dump (lua_State* L, const Proto* f, lua_Writer w, void* data, int strip)
+int ICACHE_FLASH_ATTR luaU_dump (lua_State* L, const Proto* f, lua_Writer w, void* data, int strip)
 {
  DumpState D;
  D.L=L;

@@ -9,8 +9,10 @@
 #define lauxlib_h
 
 
+#include <osapi.h>
+
 #include <stddef.h>
-#include <stdio.h>
+//#include <stdio.h>
 
 #include "lua.h"
 
@@ -170,5 +172,3 @@ LUALIB_API void (luaL_pushresult) (luaL_Buffer *B);
 #define luaL_reg	luaL_Reg
 
 #endif
-
-

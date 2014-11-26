@@ -11,10 +11,10 @@
 #define lmathlib_c
 #define LUA_LIB
 
-#include "lua.h"
+#include "lua/lua.h"
 
-#include "lauxlib.h"
-#include "lualib.h"
+#include "lua/lauxlib.h"
+#include "lua/lualib.h"
 
 
 #undef PI
@@ -150,7 +150,7 @@ static int math_ldexp (lua_State *L) {
 
 
 
-static int math_min (lua_State *L) {
+static int ICACHE_FLASH_ATTR math_min (lua_State *L) {
   int n = lua_gettop(L);  /* number of arguments */
   lua_Number dmin = luaL_checknumber(L, 1);
   int i;
@@ -164,7 +164,7 @@ static int math_min (lua_State *L) {
 }
 
 
-static int math_max (lua_State *L) {
+static int ICACHE_FLASH_ATTR math_max (lua_State *L) {
   int n = lua_gettop(L);  /* number of arguments */
   lua_Number dmax = luaL_checknumber(L, 1);
   int i;
@@ -178,7 +178,7 @@ static int math_max (lua_State *L) {
 }
 
 
-static int math_random (lua_State *L) {
+static int ICACHE_FLASH_ATTR math_random (lua_State *L) {
   /* the `%' avoids the (rare) case of r==1, and is needed also because on
      some systems (SunOS!) `rand()' may return a value larger than RAND_MAX */
   lua_Number r = (lua_Number)(rand()%RAND_MAX) / (lua_Number)RAND_MAX;
@@ -260,4 +260,3 @@ LUALIB_API int luaopen_math (lua_State *L) {
 #endif
   return 1;
 }
-

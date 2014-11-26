@@ -10,16 +10,16 @@
 #define lstring_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "lua/lua.h"
 
-#include "lmem.h"
-#include "lobject.h"
-#include "lstate.h"
-#include "lstring.h"
+#include "lua/lmem.h"
+#include "lua/lobject.h"
+#include "lua/lstate.h"
+#include "lua/lstring.h"
 
 
 
-void luaS_resize (lua_State *L, int newsize) {
+void ICACHE_FLASH_ATTR luaS_resize (lua_State *L, int newsize) {
   GCObject **newhash;
   stringtable *tb;
   int i;
@@ -47,7 +47,7 @@ void luaS_resize (lua_State *L, int newsize) {
 }
 
 
-static TString *newlstr (lua_State *L, const char *str, size_t l,
+static TString * ICACHE_FLASH_ATTR newlstr (lua_State *L, const char *str, size_t l,
                                        unsigned int h) {
   TString *ts;
   stringtable *tb;
@@ -72,7 +72,7 @@ static TString *newlstr (lua_State *L, const char *str, size_t l,
 }
 
 
-TString *luaS_newlstr (lua_State *L, const char *str, size_t l) {
+TString * ICACHE_FLASH_ATTR luaS_newlstr (lua_State *L, const char *str, size_t l) {
   GCObject *o;
   unsigned int h = cast(unsigned int, l);  /* seed */
   size_t step = (l>>5)+1;  /* if string is too long, don't hash all its chars */
@@ -93,7 +93,7 @@ TString *luaS_newlstr (lua_State *L, const char *str, size_t l) {
 }
 
 
-Udata *luaS_newudata (lua_State *L, size_t s, Table *e) {
+Udata * ICACHE_FLASH_ATTR luaS_newudata (lua_State *L, size_t s, Table *e) {
   Udata *u;
   if (s > MAX_SIZET - sizeof(Udata))
     luaM_toobig(L);
@@ -108,4 +108,3 @@ Udata *luaS_newudata (lua_State *L, size_t s, Table *e) {
   G(L)->mainthread->next = obj2gco(u);
   return u;
 }
-

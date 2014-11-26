@@ -10,13 +10,13 @@
 #define ltm_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "lua/lua.h"
 
-#include "lobject.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
-#include "ltm.h"
+#include "lua/lobject.h"
+#include "lua/lstate.h"
+#include "lua/lstring.h"
+#include "lua/ltable.h"
+#include "lua/ltm.h"
 
 
 
@@ -27,7 +27,7 @@ const char *const luaT_typenames[] = {
 };
 
 
-void luaT_init (lua_State *L) {
+void ICACHE_FLASH_ATTR luaT_init (lua_State *L) {
   static const char *const luaT_eventname[] = {  /* ORDER TM */
     "__index", "__newindex",
     "__gc", "__mode", "__eq",
@@ -47,7 +47,7 @@ void luaT_init (lua_State *L) {
 ** function to be used with macro "fasttm": optimized for absence of
 ** tag methods
 */
-const TValue *luaT_gettm (Table *events, TMS event, TString *ename) {
+const TValue * ICACHE_FLASH_ATTR luaT_gettm (Table *events, TMS event, TString *ename) {
   const TValue *tm = luaH_getstr(events, ename);
   lua_assert(event <= TM_EQ);
   if (ttisnil(tm)) {  /* no tag method? */
@@ -58,7 +58,7 @@ const TValue *luaT_gettm (Table *events, TMS event, TString *ename) {
 }
 
 
-const TValue *luaT_gettmbyobj (lua_State *L, const TValue *o, TMS event) {
+const TValue * ICACHE_FLASH_ATTR luaT_gettmbyobj (lua_State *L, const TValue *o, TMS event) {
   Table *mt;
   switch (ttype(o)) {
     case LUA_TTABLE:
@@ -72,4 +72,3 @@ const TValue *luaT_gettmbyobj (lua_State *L, const TValue *o, TMS event) {
   }
   return (mt ? luaH_getstr(mt, G(L)->tmname[event]) : luaO_nilobject);
 }
-

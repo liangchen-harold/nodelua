@@ -10,17 +10,17 @@
 #define lfunc_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "lua/lua.h"
 
-#include "lfunc.h"
-#include "lgc.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lstate.h"
+#include "lua/lfunc.h"
+#include "lua/lgc.h"
+#include "lua/lmem.h"
+#include "lua/lobject.h"
+#include "lua/lstate.h"
 
 
 
-Closure *luaF_newCclosure (lua_State *L, int nelems, Table *e) {
+Closure * ICACHE_FLASH_ATTR luaF_newCclosure (lua_State *L, int nelems, Table *e) {
   Closure *c = cast(Closure *, luaM_malloc(L, sizeCclosure(nelems)));
   luaC_link(L, obj2gco(c), LUA_TFUNCTION);
   c->c.isC = 1;
@@ -30,7 +30,7 @@ Closure *luaF_newCclosure (lua_State *L, int nelems, Table *e) {
 }
 
 
-Closure *luaF_newLclosure (lua_State *L, int nelems, Table *e) {
+Closure * ICACHE_FLASH_ATTR luaF_newLclosure (lua_State *L, int nelems, Table *e) {
   Closure *c = cast(Closure *, luaM_malloc(L, sizeLclosure(nelems)));
   luaC_link(L, obj2gco(c), LUA_TFUNCTION);
   c->l.isC = 0;
@@ -41,7 +41,7 @@ Closure *luaF_newLclosure (lua_State *L, int nelems, Table *e) {
 }
 
 
-UpVal *luaF_newupval (lua_State *L) {
+UpVal * ICACHE_FLASH_ATTR luaF_newupval (lua_State *L) {
   UpVal *uv = luaM_new(L, UpVal);
   luaC_link(L, obj2gco(uv), LUA_TUPVAL);
   uv->v = &uv->u.value;
@@ -50,7 +50,7 @@ UpVal *luaF_newupval (lua_State *L) {
 }
 
 
-UpVal *luaF_findupval (lua_State *L, StkId level) {
+UpVal * ICACHE_FLASH_ATTR luaF_findupval (lua_State *L, StkId level) {
   global_State *g = G(L);
   GCObject **pp = &L->openupval;
   UpVal *p;
@@ -79,21 +79,21 @@ UpVal *luaF_findupval (lua_State *L, StkId level) {
 }
 
 
-static void unlinkupval (UpVal *uv) {
+static void ICACHE_FLASH_ATTR unlinkupval (UpVal *uv) {
   lua_assert(uv->u.l.next->u.l.prev == uv && uv->u.l.prev->u.l.next == uv);
   uv->u.l.next->u.l.prev = uv->u.l.prev;  /* remove from `uvhead' list */
   uv->u.l.prev->u.l.next = uv->u.l.next;
 }
 
 
-void luaF_freeupval (lua_State *L, UpVal *uv) {
+void ICACHE_FLASH_ATTR luaF_freeupval (lua_State *L, UpVal *uv) {
   if (uv->v != &uv->u.value)  /* is it open? */
     unlinkupval(uv);  /* remove from open list */
   luaM_free(L, uv);  /* free upvalue */
 }
 
 
-void luaF_close (lua_State *L, StkId level) {
+void ICACHE_FLASH_ATTR luaF_close (lua_State *L, StkId level) {
   UpVal *uv;
   global_State *g = G(L);
   while (L->openupval != NULL && (uv = ngcotouv(L->openupval))->v >= level) {
@@ -112,7 +112,7 @@ void luaF_close (lua_State *L, StkId level) {
 }
 
 
-Proto *luaF_newproto (lua_State *L) {
+Proto * ICACHE_FLASH_ATTR luaF_newproto (lua_State *L) {
   Proto *f = luaM_new(L, Proto);
   luaC_link(L, obj2gco(f), LUA_TPROTO);
   f->k = NULL;
@@ -138,7 +138,7 @@ Proto *luaF_newproto (lua_State *L) {
 }
 
 
-void luaF_freeproto (lua_State *L, Proto *f) {
+void ICACHE_FLASH_ATTR luaF_freeproto (lua_State *L, Proto *f) {
   luaM_freearray(L, f->code, f->sizecode, Instruction);
   luaM_freearray(L, f->p, f->sizep, Proto *);
   luaM_freearray(L, f->k, f->sizek, TValue);
@@ -149,7 +149,7 @@ void luaF_freeproto (lua_State *L, Proto *f) {
 }
 
 
-void luaF_freeclosure (lua_State *L, Closure *c) {
+void ICACHE_FLASH_ATTR luaF_freeclosure (lua_State *L, Closure *c) {
   int size = (c->c.isC) ? sizeCclosure(c->c.nupvalues) :
                           sizeLclosure(c->l.nupvalues);
   luaM_freemem(L, c, size);
@@ -160,7 +160,7 @@ void luaF_freeclosure (lua_State *L, Closure *c) {
 ** Look for n-th local variable at line `line' in function `func'.
 ** Returns NULL if not found.
 */
-const char *luaF_getlocalname (const Proto *f, int local_number, int pc) {
+const char * ICACHE_FLASH_ATTR luaF_getlocalname (const Proto *f, int local_number, int pc) {
   int i;
   for (i = 0; i<f->sizelocvars && f->locvars[i].startpc <= pc; i++) {
     if (pc < f->locvars[i].endpc) {  /* is variable active? */
@@ -171,4 +171,3 @@ const char *luaF_getlocalname (const Proto *f, int local_number, int pc) {
   }
   return NULL;  /* not found */
 }
-

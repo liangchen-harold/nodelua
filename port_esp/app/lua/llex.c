@@ -12,16 +12,16 @@
 #define llex_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "lua/lua.h"
 
-#include "ldo.h"
-#include "llex.h"
-#include "lobject.h"
-#include "lparser.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
-#include "lzio.h"
+#include "lua/ldo.h"
+#include "lua/llex.h"
+#include "lua/lobject.h"
+#include "lua/lparser.h"
+#include "lua/lstate.h"
+#include "lua/lstring.h"
+#include "lua/ltable.h"
+#include "lua/lzio.h"
 
 
 
@@ -48,7 +48,7 @@ const char *const luaX_tokens [] = {
 #define save_and_next(ls) (save(ls, ls->current), next(ls))
 
 
-static void save (LexState *ls, int c) {
+static void ICACHE_FLASH_ATTR save (LexState *ls, int c) {
   Mbuffer *b = ls->buff;
   if (b->n + 1 > b->buffsize) {
     size_t newsize;
@@ -61,7 +61,7 @@ static void save (LexState *ls, int c) {
 }
 
 
-void luaX_init (lua_State *L) {
+void ICACHE_FLASH_ATTR luaX_init (lua_State *L) {
   int i;
   for (i=0; i<NUM_RESERVED; i++) {
     TString *ts = luaS_new(L, luaX_tokens[i]);
@@ -75,7 +75,7 @@ void luaX_init (lua_State *L) {
 #define MAXSRC          80
 
 
-const char *luaX_token2str (LexState *ls, int token) {
+const char * ICACHE_FLASH_ATTR luaX_token2str (LexState *ls, int token) {
   if (token < FIRST_RESERVED) {
     lua_assert(token == cast(unsigned char, token));
     return (iscntrl(token)) ? luaO_pushfstring(ls->L, "char(%d)", token) :
@@ -86,7 +86,7 @@ const char *luaX_token2str (LexState *ls, int token) {
 }
 
 
-static const char *txtToken (LexState *ls, int token) {
+static const char * ICACHE_FLASH_ATTR txtToken (LexState *ls, int token) {
   switch (token) {
     case TK_NAME:
     case TK_STRING:
@@ -99,7 +99,7 @@ static const char *txtToken (LexState *ls, int token) {
 }
 
 
-void luaX_lexerror (LexState *ls, const char *msg, int token) {
+void ICACHE_FLASH_ATTR luaX_lexerror (LexState *ls, const char *msg, int token) {
   char buff[MAXSRC];
   luaO_chunkid(buff, getstr(ls->source), MAXSRC);
   msg = luaO_pushfstring(ls->L, "%s:%d: %s", buff, ls->linenumber, msg);
@@ -109,12 +109,12 @@ void luaX_lexerror (LexState *ls, const char *msg, int token) {
 }
 
 
-void luaX_syntaxerror (LexState *ls, const char *msg) {
+void ICACHE_FLASH_ATTR luaX_syntaxerror (LexState *ls, const char *msg) {
   luaX_lexerror(ls, msg, ls->t.token);
 }
 
 
-TString *luaX_newstring (LexState *ls, const char *str, size_t l) {
+TString * ICACHE_FLASH_ATTR luaX_newstring (LexState *ls, const char *str, size_t l) {
   lua_State *L = ls->L;
   TString *ts = luaS_newlstr(L, str, l);
   TValue *o = luaH_setstr(L, ls->fs->h, ts);  /* entry for `str' */
@@ -126,7 +126,7 @@ TString *luaX_newstring (LexState *ls, const char *str, size_t l) {
 }
 
 
-static void inclinenumber (LexState *ls) {
+static void ICACHE_FLASH_ATTR inclinenumber (LexState *ls) {
   int old = ls->current;
   lua_assert(currIsNewline(ls));
   next(ls);  /* skip `\n' or `\r' */
@@ -137,7 +137,7 @@ static void inclinenumber (LexState *ls) {
 }
 
 
-void luaX_setinput (lua_State *L, LexState *ls, ZIO *z, TString *source) {
+void ICACHE_FLASH_ATTR luaX_setinput (lua_State *L, LexState *ls, ZIO *z, TString *source) {
   ls->decpoint = '.';
   ls->L = L;
   ls->lookahead.token = TK_EOS;  /* no look-ahead token */
@@ -160,7 +160,7 @@ void luaX_setinput (lua_State *L, LexState *ls, ZIO *z, TString *source) {
 
 
 
-static int check_next (LexState *ls, const char *set) {
+static int ICACHE_FLASH_ATTR check_next (LexState *ls, const char *set) {
   if (!strchr(set, ls->current))
     return 0;
   save_and_next(ls);
@@ -168,7 +168,7 @@ static int check_next (LexState *ls, const char *set) {
 }
 
 
-static void buffreplace (LexState *ls, char from, char to) {
+static void ICACHE_FLASH_ATTR buffreplace (LexState *ls, char from, char to) {
   size_t n = luaZ_bufflen(ls->buff);
   char *p = luaZ_buffer(ls->buff);
   while (n--)
@@ -176,7 +176,7 @@ static void buffreplace (LexState *ls, char from, char to) {
 }
 
 
-static void trydecpoint (LexState *ls, SemInfo *seminfo) {
+static void ICACHE_FLASH_ATTR trydecpoint (LexState *ls, SemInfo *seminfo) {
   /* format error: try to update decimal point separator */
   struct lconv *cv = localeconv();
   char old = ls->decpoint;
@@ -191,7 +191,7 @@ static void trydecpoint (LexState *ls, SemInfo *seminfo) {
 
 
 /* LUA_NUMBER */
-static void read_numeral (LexState *ls, SemInfo *seminfo) {
+static void ICACHE_FLASH_ATTR read_numeral (LexState *ls, SemInfo *seminfo) {
   lua_assert(isdigit(ls->current));
   do {
     save_and_next(ls);
@@ -207,7 +207,7 @@ static void read_numeral (LexState *ls, SemInfo *seminfo) {
 }
 
 
-static int skip_sep (LexState *ls) {
+static int ICACHE_FLASH_ATTR skip_sep (LexState *ls) {
   int count = 0;
   int s = ls->current;
   lua_assert(s == '[' || s == ']');
@@ -220,7 +220,7 @@ static int skip_sep (LexState *ls) {
 }
 
 
-static void read_long_string (LexState *ls, SemInfo *seminfo, int sep) {
+static void ICACHE_FLASH_ATTR read_long_string (LexState *ls, SemInfo *seminfo, int sep) {
   int cont = 0;
   (void)(cont);  /* avoid warnings when `cont' is not used */
   save_and_next(ls);  /* skip 2nd `[' */
@@ -275,7 +275,7 @@ static void read_long_string (LexState *ls, SemInfo *seminfo, int sep) {
 }
 
 
-static void read_string (LexState *ls, int del, SemInfo *seminfo) {
+static void ICACHE_FLASH_ATTR read_string (LexState *ls, int del, SemInfo *seminfo) {
   save_and_next(ls);
   while (ls->current != del) {
     switch (ls->current) {
@@ -331,7 +331,7 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
 }
 
 
-static int llex (LexState *ls, SemInfo *seminfo) {
+static int ICACHE_FLASH_ATTR llex (LexState *ls, SemInfo *seminfo) {
   luaZ_resetbuffer(ls->buff);
   for (;;) {
     switch (ls->current) {
@@ -445,7 +445,7 @@ static int llex (LexState *ls, SemInfo *seminfo) {
 }
 
 
-void luaX_next (LexState *ls) {
+void ICACHE_FLASH_ATTR luaX_next (LexState *ls) {
   ls->lastline = ls->linenumber;
   if (ls->lookahead.token != TK_EOS) {  /* is there a look-ahead token? */
     ls->t = ls->lookahead;  /* use this one */
@@ -456,8 +456,7 @@ void luaX_next (LexState *ls) {
 }
 
 
-void luaX_lookahead (LexState *ls) {
+void ICACHE_FLASH_ATTR luaX_lookahead (LexState *ls) {
   lua_assert(ls->lookahead.token == TK_EOS);
   ls->lookahead.token = llex(ls, &ls->lookahead.seminfo);
 }
-

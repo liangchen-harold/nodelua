@@ -14,10 +14,10 @@
 #define lstrlib_c
 #define LUA_LIB
 
-#include "lua.h"
+#include "lua/lua.h"
 
-#include "lauxlib.h"
-#include "lualib.h"
+#include "lua/lauxlib.h"
+#include "lua/lualib.h"
 
 
 /* macro to `unsign' a character */
@@ -40,7 +40,7 @@ static ptrdiff_t posrelat (ptrdiff_t pos, size_t len) {
 }
 
 
-static int str_sub (lua_State *L) {
+static int ICACHE_FLASH_ATTR str_sub (lua_State *L) {
   size_t l;
   const char *s = luaL_checklstring(L, 1, &l);
   ptrdiff_t start = posrelat(luaL_checkinteger(L, 2), l);
@@ -54,7 +54,7 @@ static int str_sub (lua_State *L) {
 }
 
 
-static int str_reverse (lua_State *L) {
+static int ICACHE_FLASH_ATTR str_reverse (lua_State *L) {
   size_t l;
   luaL_Buffer b;
   const char *s = luaL_checklstring(L, 1, &l);
@@ -65,7 +65,7 @@ static int str_reverse (lua_State *L) {
 }
 
 
-static int str_lower (lua_State *L) {
+static int ICACHE_FLASH_ATTR str_lower (lua_State *L) {
   size_t l;
   size_t i;
   luaL_Buffer b;
@@ -78,7 +78,7 @@ static int str_lower (lua_State *L) {
 }
 
 
-static int str_upper (lua_State *L) {
+static int ICACHE_FLASH_ATTR str_upper (lua_State *L) {
   size_t l;
   size_t i;
   luaL_Buffer b;
@@ -90,7 +90,7 @@ static int str_upper (lua_State *L) {
   return 1;
 }
 
-static int str_rep (lua_State *L) {
+static int ICACHE_FLASH_ATTR str_rep (lua_State *L) {
   size_t l;
   luaL_Buffer b;
   const char *s = luaL_checklstring(L, 1, &l);
@@ -103,7 +103,7 @@ static int str_rep (lua_State *L) {
 }
 
 
-static int str_byte (lua_State *L) {
+static int ICACHE_FLASH_ATTR str_byte (lua_State *L) {
   size_t l;
   const char *s = luaL_checklstring(L, 1, &l);
   ptrdiff_t posi = posrelat(luaL_optinteger(L, 2, 1), l);
@@ -122,7 +122,7 @@ static int str_byte (lua_State *L) {
 }
 
 
-static int str_char (lua_State *L) {
+static int ICACHE_FLASH_ATTR str_char (lua_State *L) {
   int n = lua_gettop(L);  /* number of arguments */
   int i;
   luaL_Buffer b;
@@ -137,14 +137,14 @@ static int str_char (lua_State *L) {
 }
 
 
-static int writer (lua_State *L, const void* b, size_t size, void* B) {
+static int ICACHE_FLASH_ATTR writer (lua_State *L, const void* b, size_t size, void* B) {
   (void)L;
   luaL_addlstring((luaL_Buffer*) B, (const char *)b, size);
   return 0;
 }
 
 
-static int str_dump (lua_State *L) {
+static int ICACHE_FLASH_ATTR str_dump (lua_State *L) {
   luaL_Buffer b;
   luaL_checktype(L, 1, LUA_TFUNCTION);
   lua_settop(L, 1);
@@ -183,7 +183,7 @@ typedef struct MatchState {
 #define SPECIALS	"^$*+?.([%-"
 
 
-static int check_capture (MatchState *ms, int l) {
+static int ICACHE_FLASH_ATTR check_capture (MatchState *ms, int l) {
   l -= '1';
   if (l < 0 || l >= ms->level || ms->capture[l].len == CAP_UNFINISHED)
     return luaL_error(ms->L, "invalid capture index");
@@ -191,7 +191,7 @@ static int check_capture (MatchState *ms, int l) {
 }
 
 
-static int capture_to_close (MatchState *ms) {
+static int ICACHE_FLASH_ATTR capture_to_close (MatchState *ms) {
   int level = ms->level;
   for (level--; level>=0; level--)
     if (ms->capture[level].len == CAP_UNFINISHED) return level;
@@ -199,7 +199,7 @@ static int capture_to_close (MatchState *ms) {
 }
 
 
-static const char *classend (MatchState *ms, const char *p) {
+static const char * ICACHE_FLASH_ATTR classend (MatchState *ms, const char *p) {
   switch (*p++) {
     case L_ESC: {
       if (*p == '\0')
@@ -223,7 +223,7 @@ static const char *classend (MatchState *ms, const char *p) {
 }
 
 
-static int match_class (int c, int cl) {
+static int ICACHE_FLASH_ATTR match_class (int c, int cl) {
   int res;
   switch (tolower(cl)) {
     case 'a' : res = isalpha(c); break;
@@ -242,7 +242,7 @@ static int match_class (int c, int cl) {
 }
 
 
-static int matchbracketclass (int c, const char *p, const char *ec) {
+static int ICACHE_FLASH_ATTR matchbracketclass (int c, const char *p, const char *ec) {
   int sig = 1;
   if (*(p+1) == '^') {
     sig = 0;
@@ -265,7 +265,7 @@ static int matchbracketclass (int c, const char *p, const char *ec) {
 }
 
 
-static int singlematch (int c, const char *p, const char *ep) {
+static int ICACHE_FLASH_ATTR singlematch (int c, const char *p, const char *ep) {
   switch (*p) {
     case '.': return 1;  /* matches any char */
     case L_ESC: return match_class(c, uchar(*(p+1)));
@@ -278,7 +278,7 @@ static int singlematch (int c, const char *p, const char *ep) {
 static const char *match (MatchState *ms, const char *s, const char *p);
 
 
-static const char *matchbalance (MatchState *ms, const char *s,
+static const char * ICACHE_FLASH_ATTR matchbalance (MatchState *ms, const char *s,
                                    const char *p) {
   if (*p == 0 || *(p+1) == 0)
     luaL_error(ms->L, "unbalanced pattern");
@@ -298,7 +298,7 @@ static const char *matchbalance (MatchState *ms, const char *s,
 }
 
 
-static const char *max_expand (MatchState *ms, const char *s,
+static const char * ICACHE_FLASH_ATTR max_expand (MatchState *ms, const char *s,
                                  const char *p, const char *ep) {
   ptrdiff_t i = 0;  /* counts maximum expand for item */
   while ((s+i)<ms->src_end && singlematch(uchar(*(s+i)), p, ep))
@@ -313,7 +313,7 @@ static const char *max_expand (MatchState *ms, const char *s,
 }
 
 
-static const char *min_expand (MatchState *ms, const char *s,
+static const char * ICACHE_FLASH_ATTR min_expand (MatchState *ms, const char *s,
                                  const char *p, const char *ep) {
   for (;;) {
     const char *res = match(ms, s, ep+1);
@@ -326,7 +326,7 @@ static const char *min_expand (MatchState *ms, const char *s,
 }
 
 
-static const char *start_capture (MatchState *ms, const char *s,
+static const char * ICACHE_FLASH_ATTR start_capture (MatchState *ms, const char *s,
                                     const char *p, int what) {
   const char *res;
   int level = ms->level;
@@ -340,7 +340,7 @@ static const char *start_capture (MatchState *ms, const char *s,
 }
 
 
-static const char *end_capture (MatchState *ms, const char *s,
+static const char * ICACHE_FLASH_ATTR end_capture (MatchState *ms, const char *s,
                                   const char *p) {
   int l = capture_to_close(ms);
   const char *res;
@@ -351,7 +351,7 @@ static const char *end_capture (MatchState *ms, const char *s,
 }
 
 
-static const char *match_capture (MatchState *ms, const char *s, int l) {
+static const char * ICACHE_FLASH_ATTR match_capture (MatchState *ms, const char *s, int l) {
   size_t len;
   l = check_capture(ms, l);
   len = ms->capture[l].len;
@@ -362,7 +362,7 @@ static const char *match_capture (MatchState *ms, const char *s, int l) {
 }
 
 
-static const char *match (MatchState *ms, const char *s, const char *p) {
+static const char * ICACHE_FLASH_ATTR match (MatchState *ms, const char *s, const char *p) {
   init: /* using goto's to optimize tail recursion */
   switch (*p) {
     case '(': {  /* start capture */
@@ -441,7 +441,7 @@ static const char *match (MatchState *ms, const char *s, const char *p) {
 
 
 
-static const char *lmemfind (const char *s1, size_t l1,
+static const char * ICACHE_FLASH_ATTR lmemfind (const char *s1, size_t l1,
                                const char *s2, size_t l2) {
   if (l2 == 0) return s1;  /* empty strings are everywhere */
   else if (l2 > l1) return NULL;  /* avoids a negative `l1' */
@@ -463,7 +463,7 @@ static const char *lmemfind (const char *s1, size_t l1,
 }
 
 
-static void push_onecapture (MatchState *ms, int i, const char *s,
+static void ICACHE_FLASH_ATTR push_onecapture (MatchState *ms, int i, const char *s,
                                                     const char *e) {
   if (i >= ms->level) {
     if (i == 0)  /* ms->level == 0, too */
@@ -482,7 +482,7 @@ static void push_onecapture (MatchState *ms, int i, const char *s,
 }
 
 
-static int push_captures (MatchState *ms, const char *s, const char *e) {
+static int ICACHE_FLASH_ATTR push_captures (MatchState *ms, const char *s, const char *e) {
   int i;
   int nlevels = (ms->level == 0 && s) ? 1 : ms->level;
   luaL_checkstack(ms->L, nlevels, "too many captures");
@@ -545,7 +545,7 @@ static int str_match (lua_State *L) {
 }
 
 
-static int gmatch_aux (lua_State *L) {
+static int ICACHE_FLASH_ATTR gmatch_aux (lua_State *L) {
   MatchState ms;
   size_t ls;
   const char *s = lua_tolstring(L, lua_upvalueindex(1), &ls);
@@ -571,7 +571,7 @@ static int gmatch_aux (lua_State *L) {
 }
 
 
-static int gmatch (lua_State *L) {
+static int ICACHE_FLASH_ATTR gmatch (lua_State *L) {
   luaL_checkstring(L, 1);
   luaL_checkstring(L, 2);
   lua_settop(L, 2);
@@ -581,13 +581,13 @@ static int gmatch (lua_State *L) {
 }
 
 
-static int gfind_nodef (lua_State *L) {
+static int ICACHE_FLASH_ATTR gfind_nodef (lua_State *L) {
   return luaL_error(L, LUA_QL("string.gfind") " was renamed to "
                        LUA_QL("string.gmatch"));
 }
 
 
-static void add_s (MatchState *ms, luaL_Buffer *b, const char *s,
+static void ICACHE_FLASH_ATTR add_s (MatchState *ms, luaL_Buffer *b, const char *s,
                                                    const char *e) {
   size_t l, i;
   const char *news = lua_tolstring(ms->L, 3, &l);
@@ -609,7 +609,7 @@ static void add_s (MatchState *ms, luaL_Buffer *b, const char *s,
 }
 
 
-static void add_value (MatchState *ms, luaL_Buffer *b, const char *s,
+static void ICACHE_FLASH_ATTR add_value (MatchState *ms, luaL_Buffer *b, const char *s,
                                                        const char *e) {
   lua_State *L = ms->L;
   switch (lua_type(L, 3)) {
@@ -636,12 +636,12 @@ static void add_value (MatchState *ms, luaL_Buffer *b, const char *s,
     lua_pushlstring(L, s, e - s);  /* keep original text */
   }
   else if (!lua_isstring(L, -1))
-    luaL_error(L, "invalid replacement value (a %s)", luaL_typename(L, -1)); 
+    luaL_error(L, "invalid replacement value (a %s)", luaL_typename(L, -1));
   luaL_addvalue(b);  /* add result to accumulator */
 }
 
 
-static int str_gsub (lua_State *L) {
+static int ICACHE_FLASH_ATTR str_gsub (lua_State *L) {
   size_t srcl;
   const char *src = luaL_checklstring(L, 1, &srcl);
   const char *p = luaL_checkstring(L, 2);
@@ -693,7 +693,7 @@ static int str_gsub (lua_State *L) {
 #define MAX_FORMAT	(sizeof(FLAGS) + sizeof(LUA_INTFRMLEN) + 10)
 
 
-static void addquoted (lua_State *L, luaL_Buffer *b, int arg) {
+static void ICACHE_FLASH_ATTR addquoted (lua_State *L, luaL_Buffer *b, int arg) {
   size_t l;
   const char *s = luaL_checklstring(L, arg, &l);
   luaL_addchar(b, '"');
@@ -722,7 +722,7 @@ static void addquoted (lua_State *L, luaL_Buffer *b, int arg) {
   luaL_addchar(b, '"');
 }
 
-static const char *scanformat (lua_State *L, const char *strfrmt, char *form) {
+static const char * ICACHE_FLASH_ATTR scanformat (lua_State *L, const char *strfrmt, char *form) {
   const char *p = strfrmt;
   while (*p != '\0' && strchr(FLAGS, *p) != NULL) p++;  /* skip flags */
   if ((size_t)(p - strfrmt) >= sizeof(FLAGS))
@@ -744,7 +744,7 @@ static const char *scanformat (lua_State *L, const char *strfrmt, char *form) {
 }
 
 
-static void addintlen (char *form) {
+static void ICACHE_FLASH_ATTR addintlen (char *form) {
   size_t l = strlen(form);
   char spec = form[l - 1];
   strcpy(form + l - 1, LUA_INTFRMLEN);
@@ -753,7 +753,7 @@ static void addintlen (char *form) {
 }
 
 
-static int str_format (lua_State *L) {
+static int ICACHE_FLASH_ATTR str_format (lua_State *L) {
   int top = lua_gettop(L);
   int arg = 1;
   size_t sfl;
@@ -774,22 +774,22 @@ static int str_format (lua_State *L) {
       strfrmt = scanformat(L, strfrmt, form);
       switch (*strfrmt++) {
         case 'c': {
-          sprintf(buff, form, (int)luaL_checknumber(L, arg));
+          os_sprintf(buff, form, (int)luaL_checknumber(L, arg));
           break;
         }
         case 'd':  case 'i': {
           addintlen(form);
-          sprintf(buff, form, (LUA_INTFRM_T)luaL_checknumber(L, arg));
+          os_sprintf(buff, form, (LUA_INTFRM_T)luaL_checknumber(L, arg));
           break;
         }
         case 'o':  case 'u':  case 'x':  case 'X': {
           addintlen(form);
-          sprintf(buff, form, (unsigned LUA_INTFRM_T)luaL_checknumber(L, arg));
+          os_sprintf(buff, form, (unsigned LUA_INTFRM_T)luaL_checknumber(L, arg));
           break;
         }
         case 'e':  case 'E': case 'f':
         case 'g': case 'G': {
-          sprintf(buff, form, (double)luaL_checknumber(L, arg));
+          os_sprintf(buff, form, (double)luaL_checknumber(L, arg));
           break;
         }
         case 'q': {
@@ -807,7 +807,7 @@ static int str_format (lua_State *L) {
             continue;  /* skip the `addsize' at the end */
           }
           else {
-            sprintf(buff, form, s);
+            os_sprintf(buff, form, s);
             break;
           }
         }
@@ -844,7 +844,7 @@ static const luaL_Reg strlib[] = {
 };
 
 
-static void createmetatable (lua_State *L) {
+static void ICACHE_FLASH_ATTR createmetatable (lua_State *L) {
   lua_createtable(L, 0, 1);  /* create metatable for strings */
   lua_pushliteral(L, "");  /* dummy string */
   lua_pushvalue(L, -2);
@@ -859,7 +859,7 @@ static void createmetatable (lua_State *L) {
 /*
 ** Open string library
 */
-LUALIB_API int luaopen_string (lua_State *L) {
+LUALIB_API int ICACHE_FLASH_ATTR luaopen_string (lua_State *L) {
   luaL_register(L, LUA_STRLIBNAME, strlib);
 #if defined(LUA_COMPAT_GFIND)
   lua_getfield(L, -1, "gmatch");
@@ -868,4 +868,3 @@ LUALIB_API int luaopen_string (lua_State *L) {
   createmetatable(L);
   return 1;
 }
-

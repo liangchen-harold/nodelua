@@ -13,21 +13,21 @@
 #define lapi_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "lua/lua.h"
 
-#include "lapi.h"
-#include "ldebug.h"
-#include "ldo.h"
-#include "lfunc.h"
-#include "lgc.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
-#include "ltm.h"
-#include "lundump.h"
-#include "lvm.h"
+#include "lua/lapi.h"
+#include "lua/ldebug.h"
+#include "lua/ldo.h"
+#include "lua/lfunc.h"
+#include "lua/lgc.h"
+#include "lua/lmem.h"
+#include "lua/lobject.h"
+#include "lua/lstate.h"
+#include "lua/lstring.h"
+#include "lua/ltable.h"
+#include "lua/ltm.h"
+#include "lua/lundump.h"
+#include "lua/lvm.h"
 
 
 
@@ -211,7 +211,7 @@ LUA_API void lua_replace (lua_State *L, int idx) {
   api_checkvalidindex(L, o);
   if (idx == LUA_ENVIRONINDEX) {
     Closure *func = curr_func(L);
-    api_check(L, ttistable(L->top - 1)); 
+    api_check(L, ttistable(L->top - 1));
     func->c.env = hvalue(L->top - 1);
     luaC_barrier(L, func, L->top - 1);
   }
@@ -771,7 +771,7 @@ LUA_API int lua_setfenv (lua_State *L, int idx) {
 
 #define checkresults(L,na,nr) \
      api_check(L, (nr) == LUA_MULTRET || (L->ci->top - L->top >= (nr) - (na)))
-	
+
 
 LUA_API void lua_call (lua_State *L, int nargs, int nresults) {
   StkId func;
@@ -834,7 +834,7 @@ struct CCallS {  /* data to `f_Ccall' */
 };
 
 
-static void f_Ccall (lua_State *L, void *ud) {
+static void ICACHE_FLASH_ATTR f_Ccall (lua_State *L, void *ud) {
   struct CCallS *c = cast(struct CCallS *, ud);
   Closure *cl;
   cl = luaF_newCclosure(L, 0, getcurrenv(L));
@@ -1036,7 +1036,7 @@ LUA_API void *lua_newuserdata (lua_State *L, size_t size) {
 
 
 
-static const char *aux_upvalue (StkId fi, int n, TValue **val) {
+static const char * ICACHE_FLASH_ATTR aux_upvalue (StkId fi, int n, TValue **val) {
   Closure *f;
   if (!ttisfunction(fi)) return NULL;
   f = clvalue(fi);
@@ -1084,4 +1084,3 @@ LUA_API const char *lua_setupvalue (lua_State *L, int funcindex, int n) {
   lua_unlock(L);
   return name;
 }
-

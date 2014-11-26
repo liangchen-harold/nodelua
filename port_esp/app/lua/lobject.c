@@ -4,6 +4,7 @@
 ** See Copyright Notice in lua.h
 */
 
+#include <osapi.h>
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -13,14 +14,14 @@
 #define lobject_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "lua/lua.h"
 
-#include "ldo.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "lvm.h"
+#include "lua/ldo.h"
+#include "lua/lmem.h"
+#include "lua/lobject.h"
+#include "lua/lstate.h"
+#include "lua/lstring.h"
+#include "lua/lvm.h"
 
 
 
@@ -32,7 +33,7 @@ const TValue luaO_nilobject_ = {{NULL}, LUA_TNIL};
 ** (eeeeexxx), where the real value is (1xxx) * 2^(eeeee - 1) if
 ** eeeee != 0 and (xxx) otherwise.
 */
-int luaO_int2fb (unsigned int x) {
+int ICACHE_FLASH_ATTR luaO_int2fb (unsigned int x) {
   int e = 0;  /* expoent */
   while (x >= 16) {
     x = (x+1) >> 1;
@@ -44,7 +45,7 @@ int luaO_int2fb (unsigned int x) {
 
 
 /* converts back */
-int luaO_fb2int (int x) {
+int ICACHE_FLASH_ATTR luaO_fb2int (int x) {
   int e = (x >> 3) & 31;
   if (e == 0) return x;
   else return ((x & 7)+8) << (e - 1);
@@ -69,7 +70,7 @@ int luaO_log2 (unsigned int x) {
 }
 
 
-int luaO_rawequalObj (const TValue *t1, const TValue *t2) {
+int ICACHE_FLASH_ATTR luaO_rawequalObj (const TValue *t1, const TValue *t2) {
   if (ttype(t1) != ttype(t2)) return 0;
   else switch (ttype(t1)) {
     case LUA_TNIL:
@@ -87,7 +88,7 @@ int luaO_rawequalObj (const TValue *t1, const TValue *t2) {
 }
 
 
-int luaO_str2d (const char *s, lua_Number *result) {
+int ICACHE_FLASH_ATTR luaO_str2d (const char *s, lua_Number *result) {
   char *endptr;
   *result = lua_str2number(s, &endptr);
   if (endptr == s) return 0;  /* conversion failed */
@@ -101,14 +102,14 @@ int luaO_str2d (const char *s, lua_Number *result) {
 
 
 
-static void pushstr (lua_State *L, const char *str) {
+static void ICACHE_FLASH_ATTR pushstr (lua_State *L, const char *str) {
   setsvalue2s(L, L->top, luaS_new(L, str));
   incr_top(L);
 }
 
 
 /* this function handles only `%d', `%c', %f, %p, and `%s' formats */
-const char *luaO_pushvfstring (lua_State *L, const char *fmt, va_list argp) {
+const char * ICACHE_FLASH_ATTR luaO_pushvfstring (lua_State *L, const char *fmt, va_list argp) {
   int n = 1;
   pushstr(L, "");
   for (;;) {
@@ -142,7 +143,7 @@ const char *luaO_pushvfstring (lua_State *L, const char *fmt, va_list argp) {
       }
       case 'p': {
         char buff[4*sizeof(void *) + 8]; /* should be enough space for a `%p' */
-        sprintf(buff, "%p", va_arg(argp, void *));
+        os_sprintf(buff, "%p", va_arg(argp, void *));
         pushstr(L, buff);
         break;
       }
@@ -169,7 +170,7 @@ const char *luaO_pushvfstring (lua_State *L, const char *fmt, va_list argp) {
 }
 
 
-const char *luaO_pushfstring (lua_State *L, const char *fmt, ...) {
+const char * ICACHE_FLASH_ATTR luaO_pushfstring (lua_State *L, const char *fmt, ...) {
   const char *msg;
   va_list argp;
   va_start(argp, fmt);
@@ -179,7 +180,7 @@ const char *luaO_pushfstring (lua_State *L, const char *fmt, ...) {
 }
 
 
-void luaO_chunkid (char *out, const char *source, size_t bufflen) {
+void ICACHE_FLASH_ATTR luaO_chunkid (char *out, const char *source, size_t bufflen) {
   if (*source == '=') {
     strncpy(out, source+1, bufflen);  /* remove first char */
     out[bufflen-1] = '\0';  /* ensures null termination */

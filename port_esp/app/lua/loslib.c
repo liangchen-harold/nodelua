@@ -14,13 +14,14 @@
 #define loslib_c
 #define LUA_LIB
 
-#include "lua.h"
+#include "lua/lua.h"
+#include "lua/portesp.h"
 
-#include "lauxlib.h"
-#include "lualib.h"
+#include "lua/lauxlib.h"
+#include "lua/lualib.h"
 
 
-static int os_pushresult (lua_State *L, int i, const char *filename) {
+static int ICACHE_FLASH_ATTR os_pushresult (lua_State *L, int i, const char *filename) {
   int en = errno;  /* calls to Lua API may change this value */
   if (i) {
     lua_pushboolean(L, 1);
@@ -54,14 +55,14 @@ static int os_rename (lua_State *L) {
 }
 
 
-static int os_tmpname (lua_State *L) {
-  char buff[LUA_TMPNAMBUFSIZE];
-  int err;
-  lua_tmpnam(buff, err);
-  if (err)
+static int ICACHE_FLASH_ATTR os_tmpname (lua_State *L) {
+  // char buff[LUA_TMPNAMBUFSIZE];
+  // int err;
+  // lua_tmpnam(buff, err);
+  // if (err)
     return luaL_error(L, "unable to generate a unique filename");
-  lua_pushstring(L, buff);
-  return 1;
+  // lua_pushstring(L, buff);
+  // return 1;
 }
 
 
@@ -85,19 +86,19 @@ static int os_clock (lua_State *L) {
 ** =======================================================
 */
 
-static void setfield (lua_State *L, const char *key, int value) {
+static void ICACHE_FLASH_ATTR setfield (lua_State *L, const char *key, int value) {
   lua_pushinteger(L, value);
   lua_setfield(L, -2, key);
 }
 
-static void setboolfield (lua_State *L, const char *key, int value) {
+static void ICACHE_FLASH_ATTR setboolfield (lua_State *L, const char *key, int value) {
   if (value < 0)  /* undefined? */
     return;  /* does not set field */
   lua_pushboolean(L, value);
   lua_setfield(L, -2, key);
 }
 
-static int getboolfield (lua_State *L, const char *key) {
+static int ICACHE_FLASH_ATTR getboolfield (lua_State *L, const char *key) {
   int res;
   lua_getfield(L, -1, key);
   res = lua_isnil(L, -1) ? -1 : lua_toboolean(L, -1);
@@ -106,7 +107,7 @@ static int getboolfield (lua_State *L, const char *key) {
 }
 
 
-static int getfield (lua_State *L, const char *key, int d) {
+static int ICACHE_FLASH_ATTR getfield (lua_State *L, const char *key, int d) {
   int res;
   lua_getfield(L, -1, key);
   if (lua_isnumber(L, -1))
@@ -121,7 +122,7 @@ static int getfield (lua_State *L, const char *key, int d) {
 }
 
 
-static int os_date (lua_State *L) {
+static int ICACHE_FLASH_ATTR os_date (lua_State *L) {
   const char *s = luaL_optstring(L, 1, "%c");
   time_t t = luaL_opt(L, (time_t)luaL_checknumber, 2, time(NULL));
   struct tm *stm;
@@ -167,7 +168,7 @@ static int os_date (lua_State *L) {
 }
 
 
-static int os_time (lua_State *L) {
+static int ICACHE_FLASH_ATTR os_time (lua_State *L) {
   time_t t;
   if (lua_isnoneornil(L, 1))  /* called without args? */
     t = time(NULL);  /* get current time */
@@ -192,7 +193,7 @@ static int os_time (lua_State *L) {
 }
 
 
-static int os_difftime (lua_State *L) {
+static int ICACHE_FLASH_ATTR os_difftime (lua_State *L) {
   lua_pushnumber(L, difftime((time_t)(luaL_checknumber(L, 1)),
                              (time_t)(luaL_optnumber(L, 2, 0))));
   return 1;
@@ -201,20 +202,20 @@ static int os_difftime (lua_State *L) {
 /* }====================================================== */
 
 
-static int os_setlocale (lua_State *L) {
-  static const int cat[] = {LC_ALL, LC_COLLATE, LC_CTYPE, LC_MONETARY,
-                      LC_NUMERIC, LC_TIME};
-  static const char *const catnames[] = {"all", "collate", "ctype", "monetary",
-     "numeric", "time", NULL};
-  const char *l = luaL_optstring(L, 1, NULL);
-  int op = luaL_checkoption(L, 2, "all", catnames);
-  lua_pushstring(L, setlocale(cat[op], l));
-  return 1;
+static int ICACHE_FLASH_ATTR os_setlocale (lua_State *L) {
+  // static const int cat[] = {LC_ALL, LC_COLLATE, LC_CTYPE, LC_MONETARY,
+  //                    LC_NUMERIC, LC_TIME};
+  // static const char *const catnames[] = {"all", "collate", "ctype", "monetary",
+  //   "numeric", "time", NULL};
+  // const char *l = luaL_optstring(L, 1, NULL);
+  // int op = luaL_checkoption(L, 2, "all", catnames);
+  // lua_pushstring(L, setlocale(cat[op], l));
+  // return 1;
 }
 
 
 static int os_exit (lua_State *L) {
-  exit(luaL_optint(L, 1, EXIT_SUCCESS));
+  //exit(luaL_optint(L, 1, EXIT_SUCCESS));
 }
 
 static const luaL_Reg syslib[] = {
@@ -240,4 +241,3 @@ LUALIB_API int luaopen_os (lua_State *L) {
   luaL_register(L, LUA_OSLIBNAME, syslib);
   return 1;
 }
-

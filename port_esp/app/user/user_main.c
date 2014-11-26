@@ -10,6 +10,9 @@
 *******************************************************************************/
 #include "ets_sys.h"
 #include "driver/uart.h"
+//#include "lua/lua.h"
+//#include "lua/luaconf.h"
+#include <math.h>
 
 #include "user_interface.h"
 
@@ -40,28 +43,37 @@ unsigned int default_private_key_len = 0;
  * Parameters   : none
  * Returns      : none
 *******************************************************************************/
-void user_init(void)
+void ICACHE_FLASH_ATTR user_init(void)
 {
 	int i;
     // rom use 74880 baut_rate, here reinitialize
     uart_init(BIT_RATE_115200, BIT_RATE_115200);
 	os_printf("SDK version:%d.%d.%d\n", SDK_VERSION_MAJOR, SDK_VERSION_MINOR, SDK_VERSION_REVISION);
-	for(i = 0; 1; i ++)
+	//for(i = 0; 1; i ++)
 	{
 		uint16_t val = system_adc_read();
 		os_printf("adc=%d\n", val);
 	}
+	int luamain (int argc, char **argv);
+	char *argv[] = {"lua", "-e", "print('OK!')"};
+	for(i = 0; 1; i ++)
+	{
+		luamain(3, argv);
+	}
+	//ceil(luaL_checknumber(NULL, 1));
+	//double v1, v2, r;
+	//sprintf(argv[0], "", cos(sin(v1)));
+
 	return;
 
-#if ESP_PLATFORM
-    user_esp_platform_init();
-#endif
-
-    user_devicefind_init();
-#ifdef SERVER_SSL_ENABLE
-    user_webserver_init(SERVER_SSL_PORT);
-#else
-    user_webserver_init(SERVER_PORT);
-#endif
+// #if ESP_PLATFORM
+//     user_esp_platform_init();
+// #endif
+//
+//     user_devicefind_init();
+// #ifdef SERVER_SSL_ENABLE
+//     user_webserver_init(SERVER_SSL_PORT);
+// #else
+//     user_webserver_init(SERVER_PORT);
+// #endif
 }
-

@@ -5,9 +5,9 @@
 #define LEWEI_PLATFORM      0
 
 #if ESP_PLATFORM
-#define PLUG_DEVICE             0
+#define PLUG_DEVICE             1
 #define LIGHT_DEVICE            0
-#define SENSOR_DEVICE			1
+#define SENSOR_DEVICE			0
 
 #if SENSOR_DEVICE
 #define HUMITURE_SUB_DEVICE         1
@@ -59,4 +59,3 @@
 #endif
 
 #endif
-

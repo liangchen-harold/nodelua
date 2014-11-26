@@ -9,16 +9,16 @@
 #define lundump_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "lua/lua.h"
 
-#include "ldebug.h"
-#include "ldo.h"
-#include "lfunc.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lstring.h"
-#include "lundump.h"
-#include "lzio.h"
+#include "lua/ldebug.h"
+#include "lua/ldo.h"
+#include "lua/lfunc.h"
+#include "lua/lmem.h"
+#include "lua/lobject.h"
+#include "lua/lstring.h"
+#include "lua/lundump.h"
+#include "lua/lzio.h"
 
 typedef struct {
  lua_State* L;
@@ -33,7 +33,7 @@ typedef struct {
 #else
 #define IF(c,s)		if (c) error(S,s)
 
-static void error(LoadState* S, const char* why)
+static void ICACHE_FLASH_ATTR error(LoadState* S, const char* why)
 {
  luaO_pushfstring(S->L,"%s: %s in precompiled chunk",S->name,why);
  luaD_throw(S->L,LUA_ERRSYNTAX);
@@ -45,20 +45,20 @@ static void error(LoadState* S, const char* why)
 #define LoadVar(S,x)		LoadMem(S,&x,1,sizeof(x))
 #define LoadVector(S,b,n,size)	LoadMem(S,b,n,size)
 
-static void LoadBlock(LoadState* S, void* b, size_t size)
+static void ICACHE_FLASH_ATTR LoadBlock(LoadState* S, void* b, size_t size)
 {
  size_t r=luaZ_read(S->Z,b,size);
  IF (r!=0, "unexpected end");
 }
 
-static int LoadChar(LoadState* S)
+static int ICACHE_FLASH_ATTR LoadChar(LoadState* S)
 {
  char x;
  LoadVar(S,x);
  return x;
 }
 
-static int LoadInt(LoadState* S)
+static int ICACHE_FLASH_ATTR LoadInt(LoadState* S)
 {
  int x;
  LoadVar(S,x);
@@ -66,14 +66,14 @@ static int LoadInt(LoadState* S)
  return x;
 }
 
-static lua_Number LoadNumber(LoadState* S)
+static lua_Number ICACHE_FLASH_ATTR LoadNumber(LoadState* S)
 {
  lua_Number x;
  LoadVar(S,x);
  return x;
 }
 
-static TString* LoadString(LoadState* S)
+static TString* ICACHE_FLASH_ATTR LoadString(LoadState* S)
 {
  size_t size;
  LoadVar(S,size);
@@ -87,7 +87,7 @@ static TString* LoadString(LoadState* S)
  }
 }
 
-static void LoadCode(LoadState* S, Proto* f)
+static void ICACHE_FLASH_ATTR LoadCode(LoadState* S, Proto* f)
 {
  int n=LoadInt(S);
  f->code=luaM_newvector(S->L,n,Instruction);
@@ -95,9 +95,9 @@ static void LoadCode(LoadState* S, Proto* f)
  LoadVector(S,f->code,n,sizeof(Instruction));
 }
 
-static Proto* LoadFunction(LoadState* S, TString* p);
+static Proto* ICACHE_FLASH_ATTR LoadFunction(LoadState* S, TString* p);
 
-static void LoadConstants(LoadState* S, Proto* f)
+static void ICACHE_FLASH_ATTR LoadConstants(LoadState* S, Proto* f)
 {
  int i,n;
  n=LoadInt(S);
@@ -134,7 +134,7 @@ static void LoadConstants(LoadState* S, Proto* f)
  for (i=0; i<n; i++) f->p[i]=LoadFunction(S,f->source);
 }
 
-static void LoadDebug(LoadState* S, Proto* f)
+static void ICACHE_FLASH_ATTR LoadDebug(LoadState* S, Proto* f)
 {
  int i,n;
  n=LoadInt(S);
@@ -158,7 +158,7 @@ static void LoadDebug(LoadState* S, Proto* f)
  for (i=0; i<n; i++) f->upvalues[i]=LoadString(S);
 }
 
-static Proto* LoadFunction(LoadState* S, TString* p)
+static Proto* ICACHE_FLASH_ATTR LoadFunction(LoadState* S, TString* p)
 {
  Proto* f;
  if (++S->L->nCcalls > LUAI_MAXCCALLS) error(S,"code too deep");
@@ -180,7 +180,7 @@ static Proto* LoadFunction(LoadState* S, TString* p)
  return f;
 }
 
-static void LoadHeader(LoadState* S)
+static void ICACHE_FLASH_ATTR LoadHeader(LoadState* S)
 {
  char h[LUAC_HEADERSIZE];
  char s[LUAC_HEADERSIZE];
@@ -192,7 +192,7 @@ static void LoadHeader(LoadState* S)
 /*
 ** load precompiled chunk
 */
-Proto* luaU_undump (lua_State* L, ZIO* Z, Mbuffer* buff, const char* name)
+Proto* ICACHE_FLASH_ATTR luaU_undump (lua_State* L, ZIO* Z, Mbuffer* buff, const char* name)
 {
  LoadState S;
  if (*name=='@' || *name=='=')
@@ -211,7 +211,7 @@ Proto* luaU_undump (lua_State* L, ZIO* Z, Mbuffer* buff, const char* name)
 /*
 * make header
 */
-void luaU_header (char* h)
+void ICACHE_FLASH_ATTR luaU_header (char* h)
 {
  int x=1;
  memcpy(h,LUA_SIGNATURE,sizeof(LUA_SIGNATURE)-1);

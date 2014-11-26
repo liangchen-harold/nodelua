@@ -798,26 +798,26 @@ user_esp_platform_upgrade_begin(struct espconn *pespconn, struct upgrade_server_
         server->url = (uint8 *)os_zalloc(512);
     }
 
-    if (system_upgrade_userbin_check() == UPGRADE_FW_BIN1) {
-        os_memcpy(user_bin, "user2.bin", 10);
-    } else if (system_upgrade_userbin_check() == UPGRADE_FW_BIN2) {
-        os_memcpy(user_bin, "user1.bin", 10);
-    }
+    // if (system_upgrade_userbin_check() == UPGRADE_FW_BIN1) {
+    //     os_memcpy(user_bin, "user2.bin", 10);
+    // } else if (system_upgrade_userbin_check() == UPGRADE_FW_BIN2) {
+    //     os_memcpy(user_bin, "user1.bin", 10);
+    // }
 
     os_sprintf(server->url, "GET /v1/device/rom/?action=download_rom&version=%s&filename=%s HTTP/1.0\r\nHost: "IPSTR":%d\r\n"pheadbuffer"",
                server->upgrade_version, user_bin, IP2STR(server->ip),
                server->port, devkey);
     ESP_DBG(server->url);
 
-#ifdef UPGRADE_SSL_ENABLE
-
-    if (system_upgrade_start_ssl(server) == false) {
-#else
-
-    if (system_upgrade_start(server) == false) {
-#endif
-        ESP_DBG("upgrade is already started\n");
-    }
+// #ifdef UPGRADE_SSL_ENABLE
+//
+//     if (system_upgrade_start_ssl(server) == false) {
+// #else
+//
+//     if (system_upgrade_start(server) == false) {
+// #endif
+//         ESP_DBG("upgrade is already started\n");
+//     }
 }
 #endif
 

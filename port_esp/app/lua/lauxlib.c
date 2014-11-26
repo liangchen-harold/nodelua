@@ -5,10 +5,11 @@
 */
 
 
+#include <mem.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdarg.h>
-#include <stdio.h>
+//#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -20,9 +21,9 @@
 #define lauxlib_c
 #define LUA_LIB
 
-#include "lua.h"
+#include "lua/lua.h"
 
-#include "lauxlib.h"
+#include "lua/lauxlib.h"
 
 
 #define FREELIST_REF	0	/* free list of references */
@@ -284,7 +285,7 @@ static int checkint (lua_State *L, int topop) {
 }
 
 
-static void getsizes (lua_State *L) {
+static void ICACHE_FLASH_ATTR getsizes (lua_State *L) {
   lua_getfield(L, LUA_REGISTRYINDEX, "LUA_SIZES");
   if (lua_isnil(L, -1)) {  /* no `size' table? */
     lua_pop(L, 1);  /* remove nil */
@@ -395,7 +396,7 @@ LUALIB_API const char *luaL_findtable (lua_State *L, int idx,
 #define LIMIT	(LUA_MINSTACK/2)
 
 
-static int emptybuffer (luaL_Buffer *B) {
+static int ICACHE_FLASH_ATTR emptybuffer (luaL_Buffer *B) {
   size_t l = bufflen(B);
   if (l == 0) return 0;  /* put nothing on stack */
   else {
@@ -407,7 +408,7 @@ static int emptybuffer (luaL_Buffer *B) {
 }
 
 
-static void adjuststack (luaL_Buffer *B) {
+static void ICACHE_FLASH_ATTR adjuststack (luaL_Buffer *B) {
   if (B->lvl > 1) {
     lua_State *L = B->L;
     int toget = 1;  /* number of levels to concat */
@@ -519,75 +520,76 @@ LUALIB_API void luaL_unref (lua_State *L, int t, int ref) {
 ** =======================================================
 */
 
-typedef struct LoadF {
-  int extraline;
-  FILE *f;
-  char buff[LUAL_BUFFERSIZE];
-} LoadF;
-
-
-static const char *getF (lua_State *L, void *ud, size_t *size) {
-  LoadF *lf = (LoadF *)ud;
-  (void)L;
-  if (lf->extraline) {
-    lf->extraline = 0;
-    *size = 1;
-    return "\n";
-  }
-  if (feof(lf->f)) return NULL;
-  *size = fread(lf->buff, 1, sizeof(lf->buff), lf->f);
-  return (*size > 0) ? lf->buff : NULL;
-}
-
-
-static int errfile (lua_State *L, const char *what, int fnameindex) {
-  const char *serr = strerror(errno);
-  const char *filename = lua_tostring(L, fnameindex) + 1;
-  lua_pushfstring(L, "cannot %s %s: %s", what, filename, serr);
-  lua_remove(L, fnameindex);
-  return LUA_ERRFILE;
-}
-
-
-LUALIB_API int luaL_loadfile (lua_State *L, const char *filename) {
-  LoadF lf;
-  int status, readstatus;
-  int c;
-  int fnameindex = lua_gettop(L) + 1;  /* index of filename on the stack */
-  lf.extraline = 0;
-  if (filename == NULL) {
-    lua_pushliteral(L, "=stdin");
-    lf.f = stdin;
-  }
-  else {
-    lua_pushfstring(L, "@%s", filename);
-    lf.f = fopen(filename, "r");
-    if (lf.f == NULL) return errfile(L, "open", fnameindex);
-  }
-  c = getc(lf.f);
-  if (c == '#') {  /* Unix exec. file? */
-    lf.extraline = 1;
-    while ((c = getc(lf.f)) != EOF && c != '\n') ;  /* skip first line */
-    if (c == '\n') c = getc(lf.f);
-  }
-  if (c == LUA_SIGNATURE[0] && filename) {  /* binary file? */
-    lf.f = freopen(filename, "rb", lf.f);  /* reopen in binary mode */
-    if (lf.f == NULL) return errfile(L, "reopen", fnameindex);
-    /* skip eventual `#!...' */
-   while ((c = getc(lf.f)) != EOF && c != LUA_SIGNATURE[0]) ;
-    lf.extraline = 0;
-  }
-  ungetc(c, lf.f);
-  status = lua_load(L, getF, &lf, lua_tostring(L, -1));
-  readstatus = ferror(lf.f);
-  if (filename) fclose(lf.f);  /* close file (even in case of errors) */
-  if (readstatus) {
-    lua_settop(L, fnameindex);  /* ignore results from `lua_load' */
-    return errfile(L, "read", fnameindex);
-  }
-  lua_remove(L, fnameindex);
-  return status;
-}
+//TODO: xxx by lcsky for size limit...
+// typedef struct LoadF {
+//   int extraline;
+//   FILE *f;
+//   char buff[LUAL_BUFFERSIZE];
+// } LoadF;
+//
+//
+// static const char * ICACHE_FLASH_ATTR getF (lua_State *L, void *ud, size_t *size) {
+//   LoadF *lf = (LoadF *)ud;
+//   (void)L;
+//   if (lf->extraline) {
+//     lf->extraline = 0;
+//     *size = 1;
+//     return "\n";
+//   }
+//   if (feof(lf->f)) return NULL;
+//   *size = fread(lf->buff, 1, sizeof(lf->buff), lf->f);
+//   return (*size > 0) ? lf->buff : NULL;
+// }
+//
+//
+// static int ICACHE_FLASH_ATTR errfile (lua_State *L, const char *what, int fnameindex) {
+//   const char *serr = strerror(errno);
+//   const char *filename = lua_tostring(L, fnameindex) + 1;
+//   lua_pushfstring(L, "cannot %s %s: %s", what, filename, serr);
+//   lua_remove(L, fnameindex);
+//   return LUA_ERRFILE;
+// }
+//
+//
+// LUALIB_API int luaL_loadfile (lua_State *L, const char *filename) {
+//   LoadF lf;
+//   int status, readstatus;
+//   int c;
+//   int fnameindex = lua_gettop(L) + 1;  /* index of filename on the stack */
+//   lf.extraline = 0;
+//   if (filename == NULL) {
+//     lua_pushliteral(L, "=stdin");
+//     lf.f = stdin;
+//   }
+//   else {
+//     lua_pushfstring(L, "@%s", filename);
+//     lf.f = fopen(filename, "r");
+//     if (lf.f == NULL) return errfile(L, "open", fnameindex);
+//   }
+//   c = getc(lf.f);
+//   if (c == '#') {  /* Unix exec. file? */
+//     lf.extraline = 1;
+//     while ((c = getc(lf.f)) != EOF && c != '\n') ;  /* skip first line */
+//     if (c == '\n') c = getc(lf.f);
+//   }
+//   if (c == LUA_SIGNATURE[0] && filename) {  /* binary file? */
+//     lf.f = freopen(filename, "rb", lf.f);  /* reopen in binary mode */
+//     if (lf.f == NULL) return errfile(L, "reopen", fnameindex);
+//     /* skip eventual `#!...' */
+//    while ((c = getc(lf.f)) != EOF && c != LUA_SIGNATURE[0]) ;
+//     lf.extraline = 0;
+//   }
+//   ungetc(c, lf.f);
+//   status = lua_load(L, getF, &lf, lua_tostring(L, -1));
+//   readstatus = ferror(lf.f);
+//   if (filename) fclose(lf.f);  /* close file (even in case of errors) */
+//   if (readstatus) {
+//     lua_settop(L, fnameindex);  /* ignore results from `lua_load' */
+//     return errfile(L, "read", fnameindex);
+//   }
+//   lua_remove(L, fnameindex);
+//   return status;
+// }
 
 
 typedef struct LoadS {
@@ -596,7 +598,7 @@ typedef struct LoadS {
 } LoadS;
 
 
-static const char *getS (lua_State *L, void *ud, size_t *size) {
+static const char * ICACHE_FLASH_ATTR getS (lua_State *L, void *ud, size_t *size) {
   LoadS *ls = (LoadS *)ud;
   (void)L;
   if (ls->size == 0) return NULL;
@@ -624,21 +626,34 @@ LUALIB_API int (luaL_loadstring) (lua_State *L, const char *s) {
 /* }====================================================== */
 
 
-static void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
+static void * ICACHE_FLASH_ATTR l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
   (void)ud;
   (void)osize;
   if (nsize == 0) {
-    free(ptr);
+    os_free(ptr);
     return NULL;
   }
   else
-    return realloc(ptr, nsize);
+  {
+    if (ptr != NULL)
+	{
+		void *new_ptr = (void*)os_malloc(nsize);
+		//os_memcpy()
+		os_printf("realloc!!!\n");
+		os_free(ptr);
+		return new_ptr;
+	}
+	else
+	{
+		return (void*)os_malloc(nsize);
+	}
+  }
 }
 
 
-static int panic (lua_State *L) {
+static int ICACHE_FLASH_ATTR panic (lua_State *L) {
   (void)L;  /* to avoid warnings */
-  fprintf(stderr, "PANIC: unprotected error in call to Lua API (%s)\n",
+  os_printf("PANIC: unprotected error in call to Lua API (%s)\n",
                    lua_tostring(L, -1));
   return 0;
 }
@@ -649,4 +664,3 @@ LUALIB_API lua_State *luaL_newstate (void) {
   if (L) lua_atpanic(L, &panic);
   return L;
 }
-

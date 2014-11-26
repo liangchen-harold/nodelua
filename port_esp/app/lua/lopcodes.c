@@ -8,7 +8,7 @@
 #define LUA_CORE
 
 
-#include "lopcodes.h"
+#include "lua/lopcodes.h"
 
 
 /* ORDER OP */

@@ -65,10 +65,7 @@ COMPONENTS_eagle.app.v6 = \
 	user/libuser.a	\
 	driver/libdriver.a	\
 	lwip/liblwip.a	\
-	lua/liblua.a	\
-	json/libjson.a	\
-	ssl/libssl.a	\
-	upgrade/libupgrade.a
+	lua/liblua.a
 
 LINKFLAGS_eagle.app.v6 = \
 	-L../lib        \
@@ -140,6 +137,10 @@ INCLUDES += -I ./
 PDIR := ../$(PDIR)
 sinclude $(PDIR)Makefile
 
+install: $(IMAGEODIR)/$(GEN_IMAGES)
+	./gen_misc.sh
+	../tools/esptool.py write_flash 0x00000 ../bin/eagle.app.v6.flash.bin 0x40000 ../bin/eagle.app.v6.irom0text.bin
+
 #########################################################################
 #
 #  generate bin file
@@ -151,4 +152,3 @@ $(BINODIR)/%.bin: $(IMAGEODIR)/%.out
 
 .PHONY: FORCE
 FORCE:
-

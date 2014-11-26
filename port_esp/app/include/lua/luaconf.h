@@ -10,6 +10,7 @@
 
 #include <limits.h>
 #include <stddef.h>
+#include <osapi.h>
 
 
 /*
@@ -161,7 +162,7 @@
 
 #else
 
-#define LUA_API		extern
+#define LUA_API		extern ICACHE_FLASH_ATTR
 
 #endif
 
@@ -281,7 +282,7 @@
 #define lua_freeline(L,b)	((void)L, free(b))
 #else
 #define lua_readline(L,b,p)	\
-	((void)L, fputs(p, stdout), fflush(stdout),  /* show prompt */ \
+	((void)L, __fputs(p, stdout), fflush(stdout),  /* show prompt */ \
 	fgets(b, LUA_MAXINPUT, stdin) != NULL)  /* get line */
 #define lua_saveline(L,idx)	{ (void)L; (void)idx; }
 #define lua_freeline(L,b)	{ (void)L; (void)b; }
@@ -485,7 +486,7 @@
 /*
 @@ LUAL_BUFFERSIZE is the buffer size used by the lauxlib buffer system.
 */
-#define LUAL_BUFFERSIZE		BUFSIZ
+#define LUAL_BUFFERSIZE		1024
 
 /* }================================================================== */
 
@@ -520,9 +521,10 @@
 */
 #define LUA_NUMBER_SCAN		"%lf"
 #define LUA_NUMBER_FMT		"%.14g"
-#define lua_number2str(s,n)	sprintf((s), LUA_NUMBER_FMT, (n))
+#define lua_number2str(s,n)	os_sprintf((s), LUA_NUMBER_FMT, (n))
 #define LUAI_MAXNUMBER2STR	32 /* 16 digits, sign, point, and \0 */
-#define lua_str2number(s,p)	strtod((s), (p))
+#define lua_str2number(s,p)	1,((s), (p))
+//TODO: xxx by lcsky for size limit...
 
 
 /*
@@ -760,4 +762,3 @@ union luai_Cast { double l_d; long l_l; };
 
 
 #endif
-

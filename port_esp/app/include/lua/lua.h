@@ -11,6 +11,7 @@
 
 #include <stdarg.h>
 #include <stddef.h>
+#include <c_types.h>
 
 
 #include "luaconf.h"
@@ -245,7 +246,7 @@ LUA_API void lua_setallocf (lua_State *L, lua_Alloc f, void *ud);
 
 
 
-/* 
+/*
 ** ===============================================================
 ** some useful macros
 ** ===============================================================

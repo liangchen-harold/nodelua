@@ -9,18 +9,18 @@
 #define lgc_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "lua/lua.h"
 
-#include "ldebug.h"
-#include "ldo.h"
-#include "lfunc.h"
-#include "lgc.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
-#include "ltm.h"
+#include "lua/ldebug.h"
+#include "lua/ldo.h"
+#include "lua/lfunc.h"
+#include "lua/lgc.h"
+#include "lua/lmem.h"
+#include "lua/lobject.h"
+#include "lua/lstate.h"
+#include "lua/lstring.h"
+#include "lua/ltable.h"
+#include "lua/ltm.h"
 
 
 #define GCSTEPSIZE	1024u
@@ -59,14 +59,14 @@
 #define setthreshold(g)  (g->GCthreshold = (g->estimate/100) * g->gcpause)
 
 
-static void removeentry (Node *n) {
+static void ICACHE_FLASH_ATTR removeentry (Node *n) {
   lua_assert(ttisnil(gval(n)));
   if (iscollectable(gkey(n)))
     setttype(gkey(n), LUA_TDEADKEY);  /* dead key; remove it */
 }
 
 
-static void reallymarkobject (global_State *g, GCObject *o) {
+static void ICACHE_FLASH_ATTR reallymarkobject (global_State *g, GCObject *o) {
   lua_assert(iswhite(o) && !isdead(g, o));
   white2gray(o);
   switch (o->gch.tt) {
@@ -112,7 +112,7 @@ static void reallymarkobject (global_State *g, GCObject *o) {
 }
 
 
-static void marktmu (global_State *g) {
+static void ICACHE_FLASH_ATTR marktmu (global_State *g) {
   GCObject *u = g->tmudata;
   if (u) {
     do {
@@ -125,7 +125,7 @@ static void marktmu (global_State *g) {
 
 
 /* move `dead' udata that need finalization to list `tmudata' */
-size_t luaC_separateudata (lua_State *L, int all) {
+size_t ICACHE_FLASH_ATTR luaC_separateudata (lua_State *L, int all) {
   global_State *g = G(L);
   size_t deadmem = 0;
   GCObject **p = &g->mainthread->next;
@@ -155,7 +155,7 @@ size_t luaC_separateudata (lua_State *L, int all) {
 }
 
 
-static int traversetable (global_State *g, Table *h) {
+static int ICACHE_FLASH_ATTR traversetable (global_State *g, Table *h) {
   int i;
   int weakkey = 0;
   int weakvalue = 0;
@@ -200,7 +200,7 @@ static int traversetable (global_State *g, Table *h) {
 ** All marks are conditional because a GC may happen while the
 ** prototype is still being created
 */
-static void traverseproto (global_State *g, Proto *f) {
+static void ICACHE_FLASH_ATTR traverseproto (global_State *g, Proto *f) {
   int i;
   if (f->source) stringmark(f->source);
   for (i=0; i<f->sizek; i++)  /* mark literals */
@@ -221,7 +221,7 @@ static void traverseproto (global_State *g, Proto *f) {
 
 
 
-static void traverseclosure (global_State *g, Closure *cl) {
+static void ICACHE_FLASH_ATTR traverseclosure (global_State *g, Closure *cl) {
   markobject(g, cl->c.env);
   if (cl->c.isC) {
     int i;
@@ -238,7 +238,7 @@ static void traverseclosure (global_State *g, Closure *cl) {
 }
 
 
-static void checkstacksizes (lua_State *L, StkId max) {
+static void ICACHE_FLASH_ATTR checkstacksizes (lua_State *L, StkId max) {
   int ci_used = cast_int(L->ci - L->base_ci);  /* number of `ci' in use */
   int s_used = cast_int(max - L->stack);  /* part of stack in use */
   if (L->size_ci > LUAI_MAXCALLS)  /* handling overflow? */
@@ -253,7 +253,7 @@ static void checkstacksizes (lua_State *L, StkId max) {
 }
 
 
-static void traversestack (global_State *g, lua_State *l) {
+static void ICACHE_FLASH_ATTR traversestack (global_State *g, lua_State *l) {
   StkId o, lim;
   CallInfo *ci;
   markvalue(g, gt(l));
@@ -274,7 +274,7 @@ static void traversestack (global_State *g, lua_State *l) {
 ** traverse one gray object, turning it to black.
 ** Returns `quantity' traversed.
 */
-static l_mem propagatemark (global_State *g) {
+static l_mem ICACHE_FLASH_ATTR propagatemark (global_State *g) {
   GCObject *o = g->gray;
   lua_assert(isgray(o));
   gray2black(o);
@@ -310,7 +310,7 @@ static l_mem propagatemark (global_State *g) {
       traverseproto(g, p);
       return sizeof(Proto) + sizeof(Instruction) * p->sizecode +
                              sizeof(Proto *) * p->sizep +
-                             sizeof(TValue) * p->sizek + 
+                             sizeof(TValue) * p->sizek +
                              sizeof(int) * p->sizelineinfo +
                              sizeof(LocVar) * p->sizelocvars +
                              sizeof(TString *) * p->sizeupvalues;
@@ -320,7 +320,7 @@ static l_mem propagatemark (global_State *g) {
 }
 
 
-static size_t propagateall (global_State *g) {
+static size_t ICACHE_FLASH_ATTR propagateall (global_State *g) {
   size_t m = 0;
   while (g->gray) m += propagatemark(g);
   return m;
@@ -334,7 +334,7 @@ static size_t propagateall (global_State *g) {
 ** other objects: if really collected, cannot keep them; for userdata
 ** being finalized, keep them in keys, but not in values
 */
-static int iscleared (const TValue *o, int iskey) {
+static int ICACHE_FLASH_ATTR iscleared (const TValue *o, int iskey) {
   if (!iscollectable(o)) return 0;
   if (ttisstring(o)) {
     stringmark(rawtsvalue(o));  /* strings are `values', so are never weak */
@@ -348,7 +348,7 @@ static int iscleared (const TValue *o, int iskey) {
 /*
 ** clear collected entries from weaktables
 */
-static void cleartable (GCObject *l) {
+static void ICACHE_FLASH_ATTR cleartable (GCObject *l) {
   while (l) {
     Table *h = gco2h(l);
     int i = h->sizearray;
@@ -375,7 +375,7 @@ static void cleartable (GCObject *l) {
 }
 
 
-static void freeobj (lua_State *L, GCObject *o) {
+static void ICACHE_FLASH_ATTR freeobj (lua_State *L, GCObject *o) {
   switch (o->gch.tt) {
     case LUA_TPROTO: luaF_freeproto(L, gco2p(o)); break;
     case LUA_TFUNCTION: luaF_freeclosure(L, gco2cl(o)); break;
@@ -404,7 +404,7 @@ static void freeobj (lua_State *L, GCObject *o) {
 #define sweepwholelist(L,p)	sweeplist(L,p,MAX_LUMEM)
 
 
-static GCObject **sweeplist (lua_State *L, GCObject **p, lu_mem count) {
+static GCObject ** ICACHE_FLASH_ATTR sweeplist (lua_State *L, GCObject **p, lu_mem count) {
   GCObject *curr;
   global_State *g = G(L);
   int deadmask = otherwhite(g);
@@ -428,7 +428,7 @@ static GCObject **sweeplist (lua_State *L, GCObject **p, lu_mem count) {
 }
 
 
-static void checkSizes (lua_State *L) {
+static void ICACHE_FLASH_ATTR checkSizes (lua_State *L) {
   global_State *g = G(L);
   /* check size of string hash */
   if (g->strt.nuse < cast(lu_int32, g->strt.size/4) &&
@@ -442,7 +442,7 @@ static void checkSizes (lua_State *L) {
 }
 
 
-static void GCTM (lua_State *L) {
+static void ICACHE_FLASH_ATTR GCTM (lua_State *L) {
   global_State *g = G(L);
   GCObject *o = g->tmudata->gch.next;  /* get first element */
   Udata *udata = rawgco2u(o);
@@ -474,13 +474,13 @@ static void GCTM (lua_State *L) {
 /*
 ** Call all GC tag methods
 */
-void luaC_callGCTM (lua_State *L) {
+void ICACHE_FLASH_ATTR luaC_callGCTM (lua_State *L) {
   while (G(L)->tmudata)
     GCTM(L);
 }
 
 
-void luaC_freeall (lua_State *L) {
+void ICACHE_FLASH_ATTR luaC_freeall (lua_State *L) {
   global_State *g = G(L);
   int i;
   g->currentwhite = WHITEBITS | bitmask(SFIXEDBIT);  /* mask to collect all elements */
@@ -490,7 +490,7 @@ void luaC_freeall (lua_State *L) {
 }
 
 
-static void markmt (global_State *g) {
+static void ICACHE_FLASH_ATTR markmt (global_State *g) {
   int i;
   for (i=0; i<NUM_TAGS; i++)
     if (g->mt[i]) markobject(g, g->mt[i]);
@@ -498,7 +498,7 @@ static void markmt (global_State *g) {
 
 
 /* mark root set */
-static void markroot (lua_State *L) {
+static void ICACHE_FLASH_ATTR markroot (lua_State *L) {
   global_State *g = G(L);
   g->gray = NULL;
   g->grayagain = NULL;
@@ -512,7 +512,7 @@ static void markroot (lua_State *L) {
 }
 
 
-static void remarkupvals (global_State *g) {
+static void ICACHE_FLASH_ATTR remarkupvals (global_State *g) {
   UpVal *uv;
   for (uv = g->uvhead.u.l.next; uv != &g->uvhead; uv = uv->u.l.next) {
     lua_assert(uv->u.l.next->u.l.prev == uv && uv->u.l.prev->u.l.next == uv);
@@ -522,7 +522,7 @@ static void remarkupvals (global_State *g) {
 }
 
 
-static void atomic (lua_State *L) {
+static void ICACHE_FLASH_ATTR atomic (lua_State *L) {
   global_State *g = G(L);
   size_t udsize;  /* total size of userdata to be finalized */
   /* remark occasional upvalues of (maybe) dead threads */
@@ -553,7 +553,7 @@ static void atomic (lua_State *L) {
 }
 
 
-static l_mem singlestep (lua_State *L) {
+static l_mem ICACHE_FLASH_ATTR singlestep (lua_State *L) {
   global_State *g = G(L);
   /*lua_checkmemory(L);*/
   switch (g->gcstate) {
@@ -607,7 +607,7 @@ static l_mem singlestep (lua_State *L) {
 }
 
 
-void luaC_step (lua_State *L) {
+void ICACHE_FLASH_ATTR luaC_step (lua_State *L) {
   global_State *g = G(L);
   l_mem lim = (GCSTEPSIZE/100) * g->gcstepmul;
   if (lim == 0)
@@ -632,7 +632,7 @@ void luaC_step (lua_State *L) {
 }
 
 
-void luaC_fullgc (lua_State *L) {
+void ICACHE_FLASH_ATTR luaC_fullgc (lua_State *L) {
   global_State *g = G(L);
   if (g->gcstate <= GCSpropagate) {
     /* reset sweep marks to sweep all elements (returning them to white) */
@@ -658,7 +658,7 @@ void luaC_fullgc (lua_State *L) {
 }
 
 
-void luaC_barrierf (lua_State *L, GCObject *o, GCObject *v) {
+void ICACHE_FLASH_ATTR luaC_barrierf (lua_State *L, GCObject *o, GCObject *v) {
   global_State *g = G(L);
   lua_assert(isblack(o) && iswhite(v) && !isdead(g, v) && !isdead(g, o));
   lua_assert(g->gcstate != GCSfinalize && g->gcstate != GCSpause);
@@ -671,7 +671,7 @@ void luaC_barrierf (lua_State *L, GCObject *o, GCObject *v) {
 }
 
 
-void luaC_barrierback (lua_State *L, Table *t) {
+void ICACHE_FLASH_ATTR luaC_barrierback (lua_State *L, Table *t) {
   global_State *g = G(L);
   GCObject *o = obj2gco(t);
   lua_assert(isblack(o) && !isdead(g, o));
@@ -682,7 +682,7 @@ void luaC_barrierback (lua_State *L, Table *t) {
 }
 
 
-void luaC_link (lua_State *L, GCObject *o, lu_byte tt) {
+void ICACHE_FLASH_ATTR luaC_link (lua_State *L, GCObject *o, lu_byte tt) {
   global_State *g = G(L);
   o->gch.next = g->rootgc;
   g->rootgc = o;
@@ -691,12 +691,12 @@ void luaC_link (lua_State *L, GCObject *o, lu_byte tt) {
 }
 
 
-void luaC_linkupval (lua_State *L, UpVal *uv) {
+void ICACHE_FLASH_ATTR luaC_linkupval (lua_State *L, UpVal *uv) {
   global_State *g = G(L);
   GCObject *o = obj2gco(uv);
   o->gch.next = g->rootgc;  /* link upvalue into `rootgc' list */
   g->rootgc = o;
-  if (isgray(o)) { 
+  if (isgray(o)) {
     if (g->gcstate == GCSpropagate) {
       gray2black(o);  /* closed upvalues need barrier */
       luaC_barrier(L, uv, uv->v);
@@ -707,4 +707,3 @@ void luaC_linkupval (lua_State *L, UpVal *uv) {
     }
   }
 }
-

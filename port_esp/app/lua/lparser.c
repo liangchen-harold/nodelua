@@ -10,20 +10,20 @@
 #define lparser_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "lua/lua.h"
 
-#include "lcode.h"
-#include "ldebug.h"
-#include "ldo.h"
-#include "lfunc.h"
-#include "llex.h"
-#include "lmem.h"
-#include "lobject.h"
-#include "lopcodes.h"
-#include "lparser.h"
-#include "lstate.h"
-#include "lstring.h"
-#include "ltable.h"
+#include "lua/lcode.h"
+#include "lua/ldebug.h"
+#include "lua/ldo.h"
+#include "lua/lfunc.h"
+#include "lua/llex.h"
+#include "lua/lmem.h"
+#include "lua/lobject.h"
+#include "lua/lopcodes.h"
+#include "lua/lparser.h"
+#include "lua/lstate.h"
+#include "lua/lstring.h"
+#include "lua/ltable.h"
 
 
 
@@ -54,7 +54,7 @@ static void chunk (LexState *ls);
 static void expr (LexState *ls, expdesc *v);
 
 
-static void anchor_token (LexState *ls) {
+static void ICACHE_FLASH_ATTR anchor_token (LexState *ls) {
   if (ls->t.token == TK_NAME || ls->t.token == TK_STRING) {
     TString *ts = ls->t.seminfo.ts;
     luaX_newstring(ls, getstr(ts), ts->tsv.len);
@@ -62,13 +62,13 @@ static void anchor_token (LexState *ls) {
 }
 
 
-static void error_expected (LexState *ls, int token) {
+static void ICACHE_FLASH_ATTR error_expected (LexState *ls, int token) {
   luaX_syntaxerror(ls,
       luaO_pushfstring(ls->L, LUA_QS " expected", luaX_token2str(ls, token)));
 }
 
 
-static void errorlimit (FuncState *fs, int limit, const char *what) {
+static void ICACHE_FLASH_ATTR errorlimit (FuncState *fs, int limit, const char *what) {
   const char *msg = (fs->f->linedefined == 0) ?
     luaO_pushfstring(fs->L, "main function has more than %d %s", limit, what) :
     luaO_pushfstring(fs->L, "function at line %d has more than %d %s",
@@ -77,7 +77,7 @@ static void errorlimit (FuncState *fs, int limit, const char *what) {
 }
 
 
-static int testnext (LexState *ls, int c) {
+static int ICACHE_FLASH_ATTR testnext (LexState *ls, int c) {
   if (ls->t.token == c) {
     luaX_next(ls);
     return 1;
@@ -86,12 +86,12 @@ static int testnext (LexState *ls, int c) {
 }
 
 
-static void check (LexState *ls, int c) {
+static void ICACHE_FLASH_ATTR check (LexState *ls, int c) {
   if (ls->t.token != c)
     error_expected(ls, c);
 }
 
-static void checknext (LexState *ls, int c) {
+static void ICACHE_FLASH_ATTR checknext (LexState *ls, int c) {
   check(ls, c);
   luaX_next(ls);
 }
@@ -101,7 +101,7 @@ static void checknext (LexState *ls, int c) {
 
 
 
-static void check_match (LexState *ls, int what, int who, int where) {
+static void ICACHE_FLASH_ATTR check_match (LexState *ls, int what, int who, int where) {
   if (!testnext(ls, what)) {
     if (where == ls->linenumber)
       error_expected(ls, what);
@@ -114,7 +114,7 @@ static void check_match (LexState *ls, int what, int who, int where) {
 }
 
 
-static TString *str_checkname (LexState *ls) {
+static TString * ICACHE_FLASH_ATTR str_checkname (LexState *ls) {
   TString *ts;
   check(ls, TK_NAME);
   ts = ls->t.seminfo.ts;
@@ -123,24 +123,24 @@ static TString *str_checkname (LexState *ls) {
 }
 
 
-static void init_exp (expdesc *e, expkind k, int i) {
+static void ICACHE_FLASH_ATTR init_exp (expdesc *e, expkind k, int i) {
   e->f = e->t = NO_JUMP;
   e->k = k;
   e->u.s.info = i;
 }
 
 
-static void codestring (LexState *ls, expdesc *e, TString *s) {
+static void ICACHE_FLASH_ATTR codestring (LexState *ls, expdesc *e, TString *s) {
   init_exp(e, VK, luaK_stringK(ls->fs, s));
 }
 
 
-static void checkname(LexState *ls, expdesc *e) {
+static void ICACHE_FLASH_ATTR checkname(LexState *ls, expdesc *e) {
   codestring(ls, e, str_checkname(ls));
 }
 
 
-static int registerlocalvar (LexState *ls, TString *varname) {
+static int ICACHE_FLASH_ATTR registerlocalvar (LexState *ls, TString *varname) {
   FuncState *fs = ls->fs;
   Proto *f = fs->f;
   int oldsize = f->sizelocvars;
@@ -164,7 +164,7 @@ static void new_localvar (LexState *ls, TString *name, int n) {
 }
 
 
-static void adjustlocalvars (LexState *ls, int nvars) {
+static void ICACHE_FLASH_ATTR adjustlocalvars (LexState *ls, int nvars) {
   FuncState *fs = ls->fs;
   fs->nactvar = cast_byte(fs->nactvar + nvars);
   for (; nvars; nvars--) {
@@ -173,14 +173,14 @@ static void adjustlocalvars (LexState *ls, int nvars) {
 }
 
 
-static void removevars (LexState *ls, int tolevel) {
+static void ICACHE_FLASH_ATTR removevars (LexState *ls, int tolevel) {
   FuncState *fs = ls->fs;
   while (fs->nactvar > tolevel)
     getlocvar(fs, --fs->nactvar).endpc = fs->pc;
 }
 
 
-static int indexupvalue (FuncState *fs, TString *name, expdesc *v) {
+static int ICACHE_FLASH_ATTR indexupvalue (FuncState *fs, TString *name, expdesc *v) {
   int i;
   Proto *f = fs->f;
   int oldsize = f->sizeupvalues;
@@ -204,7 +204,7 @@ static int indexupvalue (FuncState *fs, TString *name, expdesc *v) {
 }
 
 
-static int searchvar (FuncState *fs, TString *n) {
+static int ICACHE_FLASH_ATTR searchvar (FuncState *fs, TString *n) {
   int i;
   for (i=fs->nactvar-1; i >= 0; i--) {
     if (n == getlocvar(fs, i).varname)
@@ -214,14 +214,14 @@ static int searchvar (FuncState *fs, TString *n) {
 }
 
 
-static void markupval (FuncState *fs, int level) {
+static void ICACHE_FLASH_ATTR markupval (FuncState *fs, int level) {
   BlockCnt *bl = fs->bl;
   while (bl && bl->nactvar > level) bl = bl->previous;
   if (bl) bl->upval = 1;
 }
 
 
-static int singlevaraux (FuncState *fs, TString *n, expdesc *var, int base) {
+static int ICACHE_FLASH_ATTR singlevaraux (FuncState *fs, TString *n, expdesc *var, int base) {
   if (fs == NULL) {  /* no more levels? */
     init_exp(var, VGLOBAL, NO_REG);  /* default is global variable */
     return VGLOBAL;
@@ -245,7 +245,7 @@ static int singlevaraux (FuncState *fs, TString *n, expdesc *var, int base) {
 }
 
 
-static void singlevar (LexState *ls, expdesc *var) {
+static void ICACHE_FLASH_ATTR singlevar (LexState *ls, expdesc *var) {
   TString *varname = str_checkname(ls);
   FuncState *fs = ls->fs;
   if (singlevaraux(fs, varname, var, 1) == VGLOBAL)
@@ -253,7 +253,7 @@ static void singlevar (LexState *ls, expdesc *var) {
 }
 
 
-static void adjust_assign (LexState *ls, int nvars, int nexps, expdesc *e) {
+static void ICACHE_FLASH_ATTR adjust_assign (LexState *ls, int nvars, int nexps, expdesc *e) {
   FuncState *fs = ls->fs;
   int extra = nvars - nexps;
   if (hasmultret(e->k)) {
@@ -273,7 +273,7 @@ static void adjust_assign (LexState *ls, int nvars, int nexps, expdesc *e) {
 }
 
 
-static void enterlevel (LexState *ls) {
+static void ICACHE_FLASH_ATTR enterlevel (LexState *ls) {
   if (++ls->L->nCcalls > LUAI_MAXCCALLS)
 	luaX_lexerror(ls, "chunk has too many syntax levels", 0);
 }
@@ -282,7 +282,7 @@ static void enterlevel (LexState *ls) {
 #define leavelevel(ls)	((ls)->L->nCcalls--)
 
 
-static void enterblock (FuncState *fs, BlockCnt *bl, lu_byte isbreakable) {
+static void ICACHE_FLASH_ATTR enterblock (FuncState *fs, BlockCnt *bl, lu_byte isbreakable) {
   bl->breaklist = NO_JUMP;
   bl->isbreakable = isbreakable;
   bl->nactvar = fs->nactvar;
@@ -293,7 +293,7 @@ static void enterblock (FuncState *fs, BlockCnt *bl, lu_byte isbreakable) {
 }
 
 
-static void leaveblock (FuncState *fs) {
+static void ICACHE_FLASH_ATTR leaveblock (FuncState *fs) {
   BlockCnt *bl = fs->bl;
   fs->bl = bl->previous;
   removevars(fs->ls, bl->nactvar);
@@ -307,7 +307,7 @@ static void leaveblock (FuncState *fs) {
 }
 
 
-static void pushclosure (LexState *ls, FuncState *func, expdesc *v) {
+static void ICACHE_FLASH_ATTR pushclosure (LexState *ls, FuncState *func, expdesc *v) {
   FuncState *fs = ls->fs;
   Proto *f = fs->f;
   int oldsize = f->sizep;
@@ -325,7 +325,7 @@ static void pushclosure (LexState *ls, FuncState *func, expdesc *v) {
 }
 
 
-static void open_func (LexState *ls, FuncState *fs) {
+static void ICACHE_FLASH_ATTR open_func (LexState *ls, FuncState *fs) {
   lua_State *L = ls->L;
   Proto *f = luaF_newproto(L);
   fs->f = f;
@@ -353,7 +353,7 @@ static void open_func (LexState *ls, FuncState *fs) {
 }
 
 
-static void close_func (LexState *ls) {
+static void ICACHE_FLASH_ATTR close_func (LexState *ls) {
   lua_State *L = ls->L;
   FuncState *fs = ls->fs;
   Proto *f = fs->f;
@@ -380,7 +380,7 @@ static void close_func (LexState *ls) {
 }
 
 
-Proto *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff, const char *name) {
+Proto * ICACHE_FLASH_ATTR luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff, const char *name) {
   struct LexState lexstate;
   struct FuncState funcstate;
   lexstate.buff = buff;
@@ -404,7 +404,7 @@ Proto *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff, const char *name) {
 /*============================================================*/
 
 
-static void field (LexState *ls, expdesc *v) {
+static void ICACHE_FLASH_ATTR field (LexState *ls, expdesc *v) {
   /* field -> ['.' | ':'] NAME */
   FuncState *fs = ls->fs;
   expdesc key;
@@ -415,7 +415,7 @@ static void field (LexState *ls, expdesc *v) {
 }
 
 
-static void yindex (LexState *ls, expdesc *v) {
+static void ICACHE_FLASH_ATTR yindex (LexState *ls, expdesc *v) {
   /* index -> '[' expr ']' */
   luaX_next(ls);  /* skip the '[' */
   expr(ls, v);
@@ -440,7 +440,7 @@ struct ConsControl {
 };
 
 
-static void recfield (LexState *ls, struct ConsControl *cc) {
+static void ICACHE_FLASH_ATTR recfield (LexState *ls, struct ConsControl *cc) {
   /* recfield -> (NAME | `['exp1`]') = exp1 */
   FuncState *fs = ls->fs;
   int reg = ls->fs->freereg;
@@ -461,7 +461,7 @@ static void recfield (LexState *ls, struct ConsControl *cc) {
 }
 
 
-static void closelistfield (FuncState *fs, struct ConsControl *cc) {
+static void ICACHE_FLASH_ATTR closelistfield (FuncState *fs, struct ConsControl *cc) {
   if (cc->v.k == VVOID) return;  /* there is no list item */
   luaK_exp2nextreg(fs, &cc->v);
   cc->v.k = VVOID;
@@ -472,7 +472,7 @@ static void closelistfield (FuncState *fs, struct ConsControl *cc) {
 }
 
 
-static void lastlistfield (FuncState *fs, struct ConsControl *cc) {
+static void ICACHE_FLASH_ATTR lastlistfield (FuncState *fs, struct ConsControl *cc) {
   if (cc->tostore == 0) return;
   if (hasmultret(cc->v.k)) {
     luaK_setmultret(fs, &cc->v);
@@ -487,7 +487,7 @@ static void lastlistfield (FuncState *fs, struct ConsControl *cc) {
 }
 
 
-static void listfield (LexState *ls, struct ConsControl *cc) {
+static void ICACHE_FLASH_ATTR listfield (LexState *ls, struct ConsControl *cc) {
   expr(ls, &cc->v);
   luaY_checklimit(ls->fs, cc->na, MAX_INT, "items in a constructor");
   cc->na++;
@@ -495,7 +495,7 @@ static void listfield (LexState *ls, struct ConsControl *cc) {
 }
 
 
-static void constructor (LexState *ls, expdesc *t) {
+static void ICACHE_FLASH_ATTR constructor (LexState *ls, expdesc *t) {
   /* constructor -> ?? */
   FuncState *fs = ls->fs;
   int line = ls->linenumber;
@@ -540,7 +540,7 @@ static void constructor (LexState *ls, expdesc *t) {
 
 
 
-static void parlist (LexState *ls) {
+static void ICACHE_FLASH_ATTR parlist (LexState *ls) {
   /* parlist -> [ param { `,' param } ] */
   FuncState *fs = ls->fs;
   Proto *f = fs->f;
@@ -573,7 +573,7 @@ static void parlist (LexState *ls) {
 }
 
 
-static void body (LexState *ls, expdesc *e, int needself, int line) {
+static void ICACHE_FLASH_ATTR body (LexState *ls, expdesc *e, int needself, int line) {
   /* body ->  `(' parlist `)' chunk END */
   FuncState new_fs;
   open_func(ls, &new_fs);
@@ -593,7 +593,7 @@ static void body (LexState *ls, expdesc *e, int needself, int line) {
 }
 
 
-static int explist1 (LexState *ls, expdesc *v) {
+static int ICACHE_FLASH_ATTR explist1 (LexState *ls, expdesc *v) {
   /* explist1 -> expr { `,' expr } */
   int n = 1;  /* at least one expression */
   expr(ls, v);
@@ -606,7 +606,7 @@ static int explist1 (LexState *ls, expdesc *v) {
 }
 
 
-static void funcargs (LexState *ls, expdesc *f) {
+static void ICACHE_FLASH_ATTR funcargs (LexState *ls, expdesc *f) {
   FuncState *fs = ls->fs;
   expdesc args;
   int base, nparams;
@@ -664,7 +664,7 @@ static void funcargs (LexState *ls, expdesc *f) {
 */
 
 
-static void prefixexp (LexState *ls, expdesc *v) {
+static void ICACHE_FLASH_ATTR prefixexp (LexState *ls, expdesc *v) {
   /* prefixexp -> NAME | '(' expr ')' */
   switch (ls->t.token) {
     case '(': {
@@ -687,7 +687,7 @@ static void prefixexp (LexState *ls, expdesc *v) {
 }
 
 
-static void primaryexp (LexState *ls, expdesc *v) {
+static void ICACHE_FLASH_ATTR primaryexp (LexState *ls, expdesc *v) {
   /* primaryexp ->
         prefixexp { `.' NAME | `[' exp `]' | `:' NAME funcargs | funcargs } */
   FuncState *fs = ls->fs;
@@ -724,7 +724,7 @@ static void primaryexp (LexState *ls, expdesc *v) {
 }
 
 
-static void simpleexp (LexState *ls, expdesc *v) {
+static void ICACHE_FLASH_ATTR simpleexp (LexState *ls, expdesc *v) {
   /* simpleexp -> NUMBER | STRING | NIL | true | false | ... |
                   constructor | FUNCTION body | primaryexp */
   switch (ls->t.token) {
@@ -775,7 +775,7 @@ static void simpleexp (LexState *ls, expdesc *v) {
 }
 
 
-static UnOpr getunopr (int op) {
+static UnOpr ICACHE_FLASH_ATTR getunopr (int op) {
   switch (op) {
     case TK_NOT: return OPR_NOT;
     case '-': return OPR_MINUS;
@@ -785,7 +785,7 @@ static UnOpr getunopr (int op) {
 }
 
 
-static BinOpr getbinopr (int op) {
+static BinOpr ICACHE_FLASH_ATTR getbinopr (int op) {
   switch (op) {
     case '+': return OPR_ADD;
     case '-': return OPR_SUB;
@@ -825,7 +825,7 @@ static const struct {
 ** subexpr -> (simpleexp | unop subexpr) { binop subexpr }
 ** where `binop' is any binary operator with a priority higher than `limit'
 */
-static BinOpr subexpr (LexState *ls, expdesc *v, unsigned int limit) {
+static BinOpr ICACHE_FLASH_ATTR subexpr (LexState *ls, expdesc *v, unsigned int limit) {
   BinOpr op;
   UnOpr uop;
   enterlevel(ls);
@@ -853,7 +853,7 @@ static BinOpr subexpr (LexState *ls, expdesc *v, unsigned int limit) {
 }
 
 
-static void expr (LexState *ls, expdesc *v) {
+static void ICACHE_FLASH_ATTR expr (LexState *ls, expdesc *v) {
   subexpr(ls, v, 0);
 }
 
@@ -868,7 +868,7 @@ static void expr (LexState *ls, expdesc *v) {
 */
 
 
-static int block_follow (int token) {
+static int ICACHE_FLASH_ATTR block_follow (int token) {
   switch (token) {
     case TK_ELSE: case TK_ELSEIF: case TK_END:
     case TK_UNTIL: case TK_EOS:
@@ -878,7 +878,7 @@ static int block_follow (int token) {
 }
 
 
-static void block (LexState *ls) {
+static void ICACHE_FLASH_ATTR block (LexState *ls) {
   /* block -> chunk */
   FuncState *fs = ls->fs;
   BlockCnt bl;
@@ -905,7 +905,7 @@ struct LHS_assign {
 ** local value in a safe place and use this safe copy in the previous
 ** assignment.
 */
-static void check_conflict (LexState *ls, struct LHS_assign *lh, expdesc *v) {
+static void ICACHE_FLASH_ATTR check_conflict (LexState *ls, struct LHS_assign *lh, expdesc *v) {
   FuncState *fs = ls->fs;
   int extra = fs->freereg;  /* eventual position to save local variable */
   int conflict = 0;
@@ -928,7 +928,7 @@ static void check_conflict (LexState *ls, struct LHS_assign *lh, expdesc *v) {
 }
 
 
-static void assignment (LexState *ls, struct LHS_assign *lh, int nvars) {
+static void ICACHE_FLASH_ATTR assignment (LexState *ls, struct LHS_assign *lh, int nvars) {
   expdesc e;
   check_condition(ls, VLOCAL <= lh->v.k && lh->v.k <= VINDEXED,
                       "syntax error");
@@ -962,7 +962,7 @@ static void assignment (LexState *ls, struct LHS_assign *lh, int nvars) {
 }
 
 
-static int cond (LexState *ls) {
+static int ICACHE_FLASH_ATTR cond (LexState *ls) {
   /* cond -> exp */
   expdesc v;
   expr(ls, &v);  /* read condition */
@@ -972,7 +972,7 @@ static int cond (LexState *ls) {
 }
 
 
-static void breakstat (LexState *ls) {
+static void ICACHE_FLASH_ATTR breakstat (LexState *ls) {
   FuncState *fs = ls->fs;
   BlockCnt *bl = fs->bl;
   int upval = 0;
@@ -988,7 +988,7 @@ static void breakstat (LexState *ls) {
 }
 
 
-static void whilestat (LexState *ls, int line) {
+static void ICACHE_FLASH_ATTR whilestat (LexState *ls, int line) {
   /* whilestat -> WHILE cond DO block END */
   FuncState *fs = ls->fs;
   int whileinit;
@@ -1007,7 +1007,7 @@ static void whilestat (LexState *ls, int line) {
 }
 
 
-static void repeatstat (LexState *ls, int line) {
+static void ICACHE_FLASH_ATTR repeatstat (LexState *ls, int line) {
   /* repeatstat -> REPEAT block UNTIL cond */
   int condexit;
   FuncState *fs = ls->fs;
@@ -1033,7 +1033,7 @@ static void repeatstat (LexState *ls, int line) {
 }
 
 
-static int exp1 (LexState *ls) {
+static int ICACHE_FLASH_ATTR exp1 (LexState *ls) {
   expdesc e;
   int k;
   expr(ls, &e);
@@ -1043,7 +1043,7 @@ static int exp1 (LexState *ls) {
 }
 
 
-static void forbody (LexState *ls, int base, int line, int nvars, int isnum) {
+static void ICACHE_FLASH_ATTR forbody (LexState *ls, int base, int line, int nvars, int isnum) {
   /* forbody -> DO block */
   BlockCnt bl;
   FuncState *fs = ls->fs;
@@ -1064,7 +1064,7 @@ static void forbody (LexState *ls, int base, int line, int nvars, int isnum) {
 }
 
 
-static void fornum (LexState *ls, TString *varname, int line) {
+static void ICACHE_FLASH_ATTR fornum (LexState *ls, TString *varname, int line) {
   /* fornum -> NAME = exp1,exp1[,exp1] forbody */
   FuncState *fs = ls->fs;
   int base = fs->freereg;
@@ -1086,7 +1086,7 @@ static void fornum (LexState *ls, TString *varname, int line) {
 }
 
 
-static void forlist (LexState *ls, TString *indexname) {
+static void ICACHE_FLASH_ATTR forlist (LexState *ls, TString *indexname) {
   /* forlist -> NAME {,NAME} IN explist1 forbody */
   FuncState *fs = ls->fs;
   expdesc e;
@@ -1109,7 +1109,7 @@ static void forlist (LexState *ls, TString *indexname) {
 }
 
 
-static void forstat (LexState *ls, int line) {
+static void ICACHE_FLASH_ATTR forstat (LexState *ls, int line) {
   /* forstat -> FOR (fornum | forlist) END */
   FuncState *fs = ls->fs;
   TString *varname;
@@ -1127,7 +1127,7 @@ static void forstat (LexState *ls, int line) {
 }
 
 
-static int test_then_block (LexState *ls) {
+static int ICACHE_FLASH_ATTR test_then_block (LexState *ls) {
   /* test_then_block -> [IF | ELSEIF] cond THEN block */
   int condexit;
   luaX_next(ls);  /* skip IF or ELSEIF */
@@ -1162,7 +1162,7 @@ static void ifstat (LexState *ls, int line) {
 }
 
 
-static void localfunc (LexState *ls) {
+static void ICACHE_FLASH_ATTR localfunc (LexState *ls) {
   expdesc v, b;
   FuncState *fs = ls->fs;
   new_localvar(ls, str_checkname(ls), 0);
@@ -1176,7 +1176,7 @@ static void localfunc (LexState *ls) {
 }
 
 
-static void localstat (LexState *ls) {
+static void ICACHE_FLASH_ATTR localstat (LexState *ls) {
   /* stat -> LOCAL NAME {`,' NAME} [`=' explist1] */
   int nvars = 0;
   int nexps;
@@ -1195,7 +1195,7 @@ static void localstat (LexState *ls) {
 }
 
 
-static int funcname (LexState *ls, expdesc *v) {
+static int ICACHE_FLASH_ATTR funcname (LexState *ls, expdesc *v) {
   /* funcname -> NAME {field} [`:' NAME] */
   int needself = 0;
   singlevar(ls, v);
@@ -1209,7 +1209,7 @@ static int funcname (LexState *ls, expdesc *v) {
 }
 
 
-static void funcstat (LexState *ls, int line) {
+static void ICACHE_FLASH_ATTR funcstat (LexState *ls, int line) {
   /* funcstat -> FUNCTION funcname body */
   int needself;
   expdesc v, b;
@@ -1221,7 +1221,7 @@ static void funcstat (LexState *ls, int line) {
 }
 
 
-static void exprstat (LexState *ls) {
+static void ICACHE_FLASH_ATTR exprstat (LexState *ls) {
   /* stat -> func | assignment */
   FuncState *fs = ls->fs;
   struct LHS_assign v;
@@ -1235,7 +1235,7 @@ static void exprstat (LexState *ls) {
 }
 
 
-static void retstat (LexState *ls) {
+static void ICACHE_FLASH_ATTR retstat (LexState *ls) {
   /* stat -> RETURN explist */
   FuncState *fs = ls->fs;
   expdesc e;
@@ -1268,7 +1268,7 @@ static void retstat (LexState *ls) {
 }
 
 
-static int statement (LexState *ls) {
+static int ICACHE_FLASH_ATTR statement (LexState *ls) {
   int line = ls->linenumber;  /* may be needed for error messages */
   switch (ls->t.token) {
     case TK_IF: {  /* stat -> ifstat */
@@ -1322,7 +1322,7 @@ static int statement (LexState *ls) {
 }
 
 
-static void chunk (LexState *ls) {
+static void ICACHE_FLASH_ATTR chunk (LexState *ls) {
   /* chunk -> { stat [`;'] } */
   int islast = 0;
   enterlevel(ls);
