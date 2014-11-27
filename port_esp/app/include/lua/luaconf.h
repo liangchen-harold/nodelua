@@ -14,6 +14,8 @@
 #include "portesp.h"
 
 
+#define LUA_MAX_HEAP	22000
+
 /*
 ** ==================================================================
 ** Search for "@@" to find all configurable definitions.

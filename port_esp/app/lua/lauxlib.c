@@ -626,34 +626,47 @@ LUALIB_API int (luaL_loadstring) (lua_State *L, const char *s) {
 /* }====================================================== */
 
 static void * ICACHE_FLASH_ATTR l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
-  (void)ud;
+  int *used = (int *)ud;
   (void)osize;
+  //__printf("realloc memory! %d -> %d (%d)\n", osize, nsize, *used);
   if (nsize == 0) {
 	if (ptr != NULL)
 	{
-		os_free((uint32_t)ptr-sizeof(size_t));
+		os_free((uint32_t)ptr);
+		*used -= osize; /* substract old size from used memory */
 	}
     return NULL;
   }
   else
   {
+	if (*used + (nsize - osize) > LUA_MAX_HEAP)
+	{
+		__printf("failed to alloc %d memory!(%d / %d)\n", nsize, *used, LUA_MAX_HEAP);
+		return NULL;
+	}
     if (ptr != NULL)
 	{
-		if (*(size_t*)((uint32_t)ptr-sizeof(size_t)) == nsize)
+		if (osize == nsize)
 		{
 			return ptr;
 		}
-		void *new_ptr = (void*)os_malloc((uint32_t)nsize+sizeof(size_t));
-		*(size_t*)new_ptr = nsize;
-		os_memcpy((uint32_t)new_ptr+sizeof(size_t), ptr, min( nsize, *(size_t*)((uint32_t)ptr-sizeof(size_t)) ));
-		os_free((uint32_t)ptr-sizeof(size_t));
-		return (void*)((uint32_t)new_ptr+sizeof(size_t));
+		void *new_ptr = (void*)os_malloc(nsize);
+		if (new_ptr) /* reallocation successful? */
+		{
+			os_memcpy(new_ptr, ptr, min( nsize, osize ));
+			*used += (nsize - osize);
+		}
+		os_free(ptr);
+		return (void*)new_ptr;
 	}
 	else
 	{
-		void *new_ptr = (void*)os_malloc(nsize+sizeof(size_t));
-		*(size_t*)new_ptr = nsize;
-		return (void*)((uint32_t)new_ptr+sizeof(size_t));
+		void *new_ptr = (void*)os_malloc(nsize);
+		if (new_ptr) /* reallocation successful? */
+		{
+			*used += (nsize - osize);
+		}
+		return (void*)new_ptr;
 	}
   }
 }
@@ -668,7 +681,10 @@ static int ICACHE_FLASH_ATTR panic (lua_State *L) {
 
 
 LUALIB_API lua_State *luaL_newstate (void) {
-  lua_State *L = lua_newstate(l_alloc, NULL);
+  int *ud = (int*)os_malloc(sizeof(int));
+  *ud = 0;
+
+  lua_State *L = lua_newstate(l_alloc, ud);
   if (L) lua_atpanic(L, &panic);
   return L;
 }

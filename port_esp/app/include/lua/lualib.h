@@ -15,6 +15,12 @@
 #define LUA_FILEHANDLE		"FILE*"
 
 
+#define LUA_LNODE_NODE_NAME	"node"
+LUALIB_API int (luaopen_lnode_node) (lua_State *L);
+
+#define LUA_LNODE_GPIO_NAME	"gpio"
+LUALIB_API int (luaopen_lnode_gpio) (lua_State *L);
+
 #define LUA_COLIBNAME	"coroutine"
 LUALIB_API int (luaopen_base) (lua_State *L);
 
@@ -41,7 +47,7 @@ LUALIB_API int (luaopen_package) (lua_State *L);
 
 
 /* open all previous libraries */
-LUALIB_API void (luaL_openlibs) (lua_State *L); 
+LUALIB_API void (luaL_openlibs) (lua_State *L);
 
 
 

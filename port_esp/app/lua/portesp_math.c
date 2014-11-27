@@ -206,8 +206,8 @@ done:
 
 #else
 
-    //__printf("__strtod: %s\n", string);
-    return strtol(string, endPtr);
+    int ret = strtol(string, endPtr, 10);
+    return ret;
 
 #endif
 }
