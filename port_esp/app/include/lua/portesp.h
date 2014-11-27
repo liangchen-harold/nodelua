@@ -7,11 +7,19 @@
 #ifndef portesp_h
 #define portesp_h
 
+#include <osapi.h>
+#include <os_type.h>
+#include <queue.h>
 #include <stdio.h>
+#include "portesp_math.h"
 
-char *__fgets(const char *buf, int num, FILE *fd);
+#define nodelua_luaProcTaskPrio        0
+#define nodelua_luaProcTaskQueueLen    1
+os_event_t    nodelua_luaProcTaskQueue[nodelua_luaProcTaskQueueLen];
+
+#define min(a,b) ( (a)<(b)?(a):(b) )
+
+char *__fgets(char *buf, int num, FILE *fd);
 void __fputs(const char *str, FILE *fd);
-double __strtod(const char* str, char** endptr);
-void __tiny_fload_to_string(char *buf, const char *fmt, float val);
 
 #endif

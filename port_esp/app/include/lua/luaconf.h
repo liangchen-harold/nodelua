@@ -244,8 +244,8 @@
 ** CHANGE them if you want different prompts. (You can also change the
 ** prompts dynamically, assigning to globals _PROMPT/_PROMPT2.)
 */
-#define LUA_PROMPT		"> "
-#define LUA_PROMPT2		">> "
+#define LUA_PROMPT		"\033[32m>\033[0m "
+#define LUA_PROMPT2		"\033[32m>>\033[0m "
 
 
 /*
@@ -512,6 +512,13 @@
 */
 #define LUAI_UACNUMBER	double
 
+
+
+/*
+@@ ESP_LUA_USE_FLOAT turn on float support on ESP8266 platform
+@* TODO: something really bad happen in pow() when enable ESP_LUA_USE_FLOAT
+*/
+//#define ESP_LUA_USE_FLOAT
 
 /*
 @@ LUA_NUMBER_SCAN is the format for reading numbers.

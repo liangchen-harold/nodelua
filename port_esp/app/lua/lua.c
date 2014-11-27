@@ -17,6 +17,8 @@
 #include "lua/lauxlib.h"
 #include "lua/lualib.h"
 
+#include "microrl/microrl.h"
+extern microrl_t _rl;
 
 
 static lua_State *globalL = NULL;
@@ -57,8 +59,8 @@ static void ICACHE_FLASH_ATTR print_usage (void) {
 
 
 static void ICACHE_FLASH_ATTR l_message (const char *pname, const char *msg) {
-  if (pname) os_printf("%s: ", pname);
-  os_printf("%s\n", msg);
+  if (pname) __printf("%s: ", pname);
+  __printf("%s\n", msg);
   //fflush(stderr);
 }
 
@@ -182,8 +184,7 @@ static int ICACHE_FLASH_ATTR pushline (lua_State *L, int firstline) {
   char buffer[LUA_MAXINPUT];
   char *b = buffer;
   size_t l;
-  const char *prmt = get_prompt(L, firstline);
-  if (lua_readline(L, b, prmt) == 0)
+  if (__fgets(b, LUA_MAXINPUT, stdin) == NULL)
     return 0;  /* no input */
   l = strlen(b);
   if (l > 0 && b[l-1] == '\n')  /* line ends with newline? */
@@ -235,7 +236,7 @@ static void ICACHE_FLASH_ATTR dotty (lua_State *L) {
   }
   lua_settop(L, 0);  /* clear stack */
   __fputs("\n", stdout);
-  fflush(stdout);
+  //fflush(stdout);
   progname = oldprogname;
 }
 
@@ -381,7 +382,6 @@ static int ICACHE_FLASH_ATTR pmain (lua_State *L) {
   return 0;
 }
 
-
 int ICACHE_FLASH_ATTR luamain (int argc, char **argv) {
   int status;
   struct Smain s;
@@ -396,4 +396,111 @@ int ICACHE_FLASH_ATTR luamain (int argc, char **argv) {
   report(L, status);
   lua_close(L);
   return (status || s.status) ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+
+static int readline_state = 0;
+lua_State *L;
+/**
+  * @brief  Task of process command or txdata.
+  * @param  events: no used
+  * @retval None
+  */
+static void ICACHE_FLASH_ATTR
+nodelua_luaProcTask(os_event_t *events)
+{
+    int status;
+    switch(readline_state)
+    {
+        case 0:
+            lua_settop(L, 0);
+            if (!pushline(L, 1))
+            {
+                readline_state = 0;  /* no input */
+                return;
+            }
+            readline_state = 1;
+
+            status = luaL_loadbuffer(L, lua_tostring(L, 1), lua_strlen(L, 1), "=stdin");
+            if (!incomplete(L, status))
+            {
+                readline_state = 2;
+                break;  /* cannot try to add lines? */
+            }
+            break;
+
+        case 1:
+            if (!pushline(L, 0))  /* no more input? */
+            {
+                readline_state = 0;  /* no input */
+                return;
+            }
+            lua_pushliteral(L, "\n");  /* add a new line... */
+            lua_insert(L, -2);  /* ...between the two lines */
+            lua_concat(L, 3);  /* join them */
+            status = luaL_loadbuffer(L, lua_tostring(L, 1), lua_strlen(L, 1), "=stdin");
+            if (!incomplete(L, status))
+            {
+                readline_state = 2;
+                break;  /* cannot try to add lines? */
+            }
+            break;
+    }
+
+    if (readline_state == 1)
+    {
+        const char *prmt = get_prompt(L, 0);
+        microrl_set_prompt_str(&_rl, prmt, 3);
+    }
+    else if (readline_state == 2)
+    {
+        readline_state = 0;
+
+        lua_saveline(L, 1);
+        lua_remove(L, 1);  /* remove line */
+        if (status != -1)
+        {
+            if (status == 0) status = docall(L, 0, 0);
+            report(L, status);
+            if (status == 0 && lua_gettop(L) > 0) {  /* any result to print? */
+                lua_getglobal(L, "print");
+                lua_insert(L, 1);
+                if (lua_pcall(L, lua_gettop(L)-1, 0, 0) != 0)
+                    l_message(progname, lua_pushfstring(L,
+                                       "error calling " LUA_QL("print") " (%s)",
+                                       lua_tostring(L, -1)));
+            }
+
+            const char *prmt = get_prompt(L, 1);
+            microrl_set_prompt_str(&_rl, prmt, 2);
+        }
+    }
+}
+
+int ICACHE_FLASH_ATTR luainit ()
+{
+    progname = "nodelua";
+    L = lua_open();  /* create state */
+    if (L == NULL) {
+        l_message(progname, "cannot create state: not enough memory");
+        return EXIT_FAILURE;
+    }
+
+
+    struct Smain *s = (struct Smain *)lua_touserdata(L, 1);
+    lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
+    luaL_openlibs(L);  /* open libraries */
+    lua_gc(L, LUA_GCRESTART, 0);
+
+    print_version();
+
+    progname = NULL;
+    const char *prmt = get_prompt(L, 1);
+    microrl_set_prompt_str(&_rl, prmt, 2);
+
+    // lua_settop(L, 0);  /* clear stack */
+    // __fputs("\n", stdout);
+    // lua_close(L);
+
+	system_os_task(nodelua_luaProcTask, nodelua_luaProcTaskPrio, nodelua_luaProcTaskQueue, nodelua_luaProcTaskQueueLen);
 }

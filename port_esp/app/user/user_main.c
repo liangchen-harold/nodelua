@@ -11,8 +11,8 @@
 #include "ets_sys.h"
 #include <osapi.h>
 #include "driver/uart.h"
-//#include "lua/lua.h"
-//#include "lua/luaconf.h"
+#include "lua/lua.h"
+#include "lua/luaconf.h"
 #include <math.h>
 
 #include "user_interface.h"
@@ -47,26 +47,25 @@ unsigned int default_private_key_len = 0;
 void ICACHE_FLASH_ATTR user_init(void)
 {
 	int i;
+	uint32 buf[256];
+
     // rom use 74880 baut_rate, here reinitialize
     uart_init(BIT_RATE_115200, BIT_RATE_115200);
 
-	os_printf("SDK version:%d.%d.%d\n", SDK_VERSION_MAJOR, SDK_VERSION_MINOR, SDK_VERSION_REVISION);
+	__printf("SDK version:%d.%d.%d\n", SDK_VERSION_MAJOR, SDK_VERSION_MINOR, SDK_VERSION_REVISION);
 
-	uint32 buf[256];
 	SpiFlashOpResult succ = spi_flash_read(0x3c000, buf, sizeof(buf));
 	os_printf("load %s: %s", succ == SPI_FLASH_RESULT_OK? "succ" : "fail", (char*)buf);
 
-	int luamain (int argc, char **argv);
-	char *argv[] = {"lua", "-e", (char*)buf};
-	for(i = 0; 1; i ++)
-	{
-		uint16_t val = system_adc_read();
-		os_printf("adc=%d\n", val);
-		luamain(3, argv);
-	}
-	//ceil(luaL_checknumber(NULL, 1));
-	//double v1, v2, r;
-	//sprintf(argv[0], "", cos(sin(v1)));
+	// char *argv[] = {"lua", "-e", (char*)buf};
+	// for(i = 0; 1; i ++)
+	// {
+	// 	uint16_t val = system_adc_read();
+	// 	__printf("adc=%d\n", val);
+	// 	luamain(sizeof(argv)/sizeof(char*), argv);
+	// }
+
+	luainit();
 
 	return;
 

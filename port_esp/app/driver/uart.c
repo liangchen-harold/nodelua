@@ -12,12 +12,16 @@
 #include "ets_sys.h"
 #include "osapi.h"
 #include "driver/uart.h"
+#include "microrl/microrl.h"
 
 #define UART0   0
 #define UART1   1
 
 // UartDev is defined and initialized in rom code.
 extern UartDevice UartDev;
+
+// readline library
+microrl_t _rl;
 
 LOCAL void uart0_rx_intr_handler(void *para);
 
@@ -130,19 +134,50 @@ uart0_rx_intr_handler(void *para)
 
         /* you can add your handle code below.*/
 
-        *(pRxBuff->pWritePos) = RcvChar;
-
-        // insert here for get one command line from uart
-        if (RcvChar == '\r') {
-            pRxBuff->BuffState = WRITE_OVER;
+        if (RcvChar == '\r')
+        {
+            RcvChar = '\n';
         }
+        microrl_insert_char (&_rl, RcvChar);
 
-        pRxBuff->pWritePos++;
-
-        if (pRxBuff->pWritePos == (pRxBuff->pRcvMsgBuff + RX_BUFF_SIZE)) {
-            // overflow ...we may need more error handle here.
-            pRxBuff->pWritePos = pRxBuff->pRcvMsgBuff ;
-        }
+        // if (RcvChar==0x11 ||
+        //     RcvChar==0x12 ||
+        //     RcvChar==0x13 ||
+        //     RcvChar==0x14)
+        // {
+        //     continue;
+        // }
+        //
+        // *(pRxBuff->pWritePos) = RcvChar;
+        //
+        // // insert here for get one command line from uart
+        // if (RcvChar == '\r')
+        // {
+        //     uart_tx_one_char('\r');
+        //     uart_tx_one_char('\n');
+        //
+        //     pRxBuff->pWritePos = pRxBuff->pRcvMsgBuff;
+        //     nodelua_recvLine(pRxBuff->pRcvMsgBuff);
+        // }
+        // else if (RcvChar == 0x08) //backspace
+        // {
+        //     if (pRxBuff->pWritePos > pRxBuff->pRcvMsgBuff)
+        //     {
+        //         uart_tx_one_char(RcvChar); //display back
+        //         pRxBuff->pWritePos --;
+        //     }
+        // }
+        // else
+        // {
+        //     uart_tx_one_char(RcvChar); //display back
+        //     pRxBuff->pWritePos++;
+        // }
+        //
+        //
+        // if (pRxBuff->pWritePos == (pRxBuff->pRcvMsgBuff + RX_BUFF_SIZE)) {
+        //     // overflow ...we may need more error handle here.
+        //     pRxBuff->pWritePos = pRxBuff->pRcvMsgBuff ;
+        // }
     }
 }
 
@@ -160,8 +195,23 @@ uart0_tx_buffer(uint8 *buf, uint16 len)
     uint16 i;
 
     for (i = 0; i < len; i++) {
-        uart_tx_one_char(buf[i]);
+        if (buf[i] == '\n') {
+            uart_tx_one_char('\r');
+            uart_tx_one_char('\n');
+        } else if (buf[i] == '\r') {
+        } else {
+            uart_tx_one_char(buf[i]);
+        }
     }
+}
+
+void _lr_print (const char * str)
+{
+	__printf ("%s", str);
+}
+int _lr_execute (const char *line)
+{
+	nodelua_recvLine (line);
 }
 
 /******************************************************************************
@@ -183,5 +233,9 @@ uart_init(UartBautRate uart0_br, UartBautRate uart1_br)
 
     // install uart1 putc callback
     os_install_putc1((void *)uart1_write_char);
-}
 
+    // init readline
+    microrl_init (&_rl, _lr_print);
+    microrl_set_execute_callback (&_rl, _lr_execute);
+
+}

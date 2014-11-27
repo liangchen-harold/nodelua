@@ -625,7 +625,6 @@ LUALIB_API int (luaL_loadstring) (lua_State *L, const char *s) {
 
 /* }====================================================== */
 
-#define min(a,b) ( (a)<(b)?(a):(b) )
 static void * ICACHE_FLASH_ATTR l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
   (void)ud;
   (void)osize;
@@ -662,7 +661,7 @@ static void * ICACHE_FLASH_ATTR l_alloc (void *ud, void *ptr, size_t osize, size
 
 static int ICACHE_FLASH_ATTR panic (lua_State *L) {
   (void)L;  /* to avoid warnings */
-  os_printf("PANIC: unprotected error in call to Lua API (%s)\n",
+  __printf("PANIC: unprotected error in call to Lua API (%s)\n",
                    lua_tostring(L, -1));
   return 0;
 }

@@ -185,7 +185,11 @@ static void ICACHE_FLASH_ATTR trydecpoint (LexState *ls, SemInfo *seminfo) {
   if (!luaO_str2d(luaZ_buffer(ls->buff), &seminfo->r)) {
     /* format error with correct decimal point: no more options */
     buffreplace(ls, ls->decpoint, '.');  /* undo change (for error message) */
+#ifdef ESP_LUA_USE_FLOAT
     luaX_lexerror(ls, "malformed number", TK_NUMBER);
+#else
+    luaX_lexerror(ls, "(No float point suport) malformed number", TK_NUMBER);
+#endif
   }
 }
 

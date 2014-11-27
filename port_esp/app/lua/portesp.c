@@ -9,107 +9,65 @@
 #include <sys/time.h>
 #include <math.h>
 
+#include "ets_sys.h"
+#include "driver/uart.h"
+
+#define lua_c
 #include "lua/lua.h"
 
-double ICACHE_FLASH_ATTR __strtod(const char* str, char** endptr)
+void ICACHE_FLASH_ATTR __printf(const char *fmt, ...)
 {
-    os_printf("__strtod: %s\n", str);
-    return strtol(str, endptr);
+	static char buf[256];
+    va_list argptr;
+    va_start(argptr,fmt);
+	ets_vsprintf(buf, fmt, argptr);
+    va_end(argptr);
+	uart0_tx_buffer(buf, os_strlen(buf));
+	//os_printf("%s", buf);
 }
-char * ICACHE_FLASH_ATTR __fgets(const char *buf, int num, FILE *fd)
-{
 
+static char readline_line[LUA_MAXINPUT];
+char * ICACHE_FLASH_ATTR __fgets(char *buf, int num, FILE *fd)
+{
+    int i;
+    if (readline_line != NULL)
+    {
+        //__printf("__fgets: %s\n", readline_line);
+        char *p = readline_line;
+        char *k = buf;
+        for (i = 0; i < num-2; i ++)
+        {
+            *k = *p;
+            if (*p == '\r' || *p == 0)
+            {
+                break;
+            }
+            k ++;
+            p ++;
+        }
+        *(k) = '\r';
+        *(k+1) = 0;
+    }
+    return buf;
 }
 void ICACHE_FLASH_ATTR __fputs(const char *str, FILE *fd)
 {
-    os_printf("%s", str);
-}
-void ICACHE_FLASH_ATTR __tiny_fload_to_string(char *buf, const char *fmt, float val)
-{
-    os_sprintf(buf, "%d", (int)val);
-    // char * dtoa(char *s, double n);
-    //
-    // dtoa(buf, val);
+	uart0_tx_buffer(str, os_strlen(str));
+	//os_printf("%s", str);
 }
 
-
-
-
-
-
-double ICACHE_FLASH_ATTR pow(double a, double b)
+/**
+  * @brief  Uart receive task.
+  * @param  events: contain the uart receive data
+  * @retval None
+  */
+void ICACHE_FLASH_ATTR
+nodelua_recvLine(char *line)
 {
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR floor(double a)
-{
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR ceil(double a)
-{
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR sin(double a)
-{
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR asin(double a)
-{
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR sinh(double a)
-{
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR cos(double a)
-{
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR acos(double a)
-{
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR cosh(double a)
-{
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR atan(double a)
-{
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR atan2(double a, double b)
-{
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR tan(double a)
-{
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR tanh(double a)
-{
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR exp(double a)
-{
-    return 0;
-}
-
-double ICACHE_FLASH_ATTR fmod(double a, double b)
-{
-    return 0;
+    int len = min(strlen(line), LUA_MAXINPUT-1);
+    os_memcpy(readline_line, line, len);
+    readline_line[len] = 0;
+    system_os_post(nodelua_luaProcTaskPrio, 0, 0);
 }
 
 int ICACHE_FLASH_ATTR _unlink_r(const char *filename)

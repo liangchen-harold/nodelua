@@ -26,6 +26,7 @@ SUBDIRS=    \
 	driver	\
 	lwip	\
 	lua	\
+	microrl	\
 	json	\
 	ssl	\
 	upgrade
@@ -65,7 +66,8 @@ COMPONENTS_eagle.app.v6 = \
 	user/libuser.a	\
 	driver/libdriver.a	\
 	lwip/liblwip.a	\
-	lua/liblua.a
+	lua/liblua.a	\
+	microrl/libmicrorl.a
 
 LINKFLAGS_eagle.app.v6 = \
 	-L../lib        \
