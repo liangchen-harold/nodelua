@@ -545,7 +545,11 @@
 #define luai_numsub(a,b)	((a)-(b))
 #define luai_nummul(a,b)	((a)*(b))
 #define luai_numdiv(a,b)	((a)/(b))
+#ifdef ESP_LUA_USE_FLOAT
 #define luai_nummod(a,b)	((a) - floor((a)/(b))*(b))
+#else
+#define luai_nummod(a,b)	((int)(a) % (int)(b))
+#endif
 #define luai_numpow(a,b)	(pow(a,b))
 #define luai_numunm(a)		(-(a))
 #define luai_numeq(a,b)		((a)==(b))

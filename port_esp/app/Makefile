@@ -12,8 +12,8 @@
 #     a generated lib/image xxx.a ()
 #
 TARGET = eagle
-#FLAVOR = release
-FLAVOR = debug
+FLAVOR = release
+#FLAVOR = debug
 
 #EXTRA_CCFLAGS += -u
 
@@ -141,7 +141,7 @@ sinclude $(PDIR)Makefile
 
 install: $(IMAGEODIR)/$(GEN_IMAGES)
 	./gen_misc.sh
-	../tools/esptool.py write_flash 0x00000 ../bin/eagle.app.v6.flash.bin 0x40000 ../bin/eagle.app.v6.irom0text.bin
+	../tools/esptool.py write_flash 0x00000 ../bin/eagle.app.v6.flash.bin 0x10000 ../bin/eagle.app.v6.irom0text.bin
 
 #########################################################################
 #

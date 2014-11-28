@@ -7,7 +7,8 @@ BUGS and TODO:
 
 #include <string.h>
 #include <ctype.h>
-#include <stdlib.h>
+#include <osapi.h>
+#include <os_type.h>
 #include "microrl/microrl.h"
 #ifdef _USE_LIBC_STDIO
 #include <stdio.h>
@@ -22,7 +23,7 @@ char * prompt_default = _PROMPT_DEFAULT;
 #ifdef _HISTORY_DEBUG
 //*****************************************************************************
 // print buffer content on screen
-static void print_hist (ring_history_t * pThis)
+static void ICACHE_FLASH_ATTR print_hist (ring_history_t * pThis)
 {
 	printf ("\n");
 	for (int i = 0; i < _RING_HISTORY_LEN; i++) {
@@ -51,7 +52,7 @@ static void print_hist (ring_history_t * pThis)
 
 //*****************************************************************************
 // remove older message from ring buffer
-static void hist_erase_older (ring_history_t * pThis)
+static void ICACHE_FLASH_ATTR hist_erase_older (ring_history_t * pThis)
 {
 	int new_pos = pThis->begin + pThis->ring_buf [pThis->begin] + 1;
 	if (new_pos >= _RING_HISTORY_LEN)
@@ -62,7 +63,7 @@ static void hist_erase_older (ring_history_t * pThis)
 
 //*****************************************************************************
 // check space for new line, remove older while not space
-static int hist_is_space_for_new (ring_history_t * pThis, int len)
+static int ICACHE_FLASH_ATTR hist_is_space_for_new (ring_history_t * pThis, int len)
 {
 	if (pThis->ring_buf [pThis->begin] == 0)
 		return true;
@@ -78,7 +79,7 @@ static int hist_is_space_for_new (ring_history_t * pThis, int len)
 
 //*****************************************************************************
 // put line to ring buffer
-static void hist_save_line (ring_history_t * pThis, char * line, int len)
+static void ICACHE_FLASH_ATTR hist_save_line (ring_history_t * pThis, char * line, int len)
 {
 	if (len > _RING_HISTORY_LEN - 2)
 		return;
@@ -91,11 +92,11 @@ static void hist_save_line (ring_history_t * pThis, char * line, int len)
 
 	// store line
 	if (len < _RING_HISTORY_LEN-pThis->end-1)
-		memcpy (pThis->ring_buf + pThis->end + 1, line, len);
+		os_memcpy (pThis->ring_buf + pThis->end + 1, line, len);
 	else {
 		int part_len = _RING_HISTORY_LEN-pThis->end-1;
-		memcpy (pThis->ring_buf + pThis->end + 1, line, part_len);
-		memcpy (pThis->ring_buf, line + part_len, len - part_len);
+		os_memcpy (pThis->ring_buf + pThis->end + 1, line, part_len);
+		os_memcpy (pThis->ring_buf, line + part_len, len - part_len);
 	}
 	pThis->ring_buf [pThis->end] = len;
 	pThis->end = pThis->end + len + 1;
@@ -110,7 +111,7 @@ static void hist_save_line (ring_history_t * pThis, char * line, int len)
 
 //*****************************************************************************
 // copy saved line to 'line' and return size of line
-static int hist_restore_line (ring_history_t * pThis, char * line, int dir)
+static int ICACHE_FLASH_ATTR hist_restore_line (ring_history_t * pThis, char * line, int dir)
 {
 	int cnt = 0;
 	// count history record
@@ -137,13 +138,13 @@ static int hist_restore_line (ring_history_t * pThis, char * line, int dir)
 					pThis->cur++;
 				// obtain saved line
 				if (pThis->ring_buf [header] + header < _RING_HISTORY_LEN) {
-					memset (line, 0, _COMMAND_LINE_LEN);
-					memcpy (line, pThis->ring_buf + header + 1, pThis->ring_buf[header]);
+					os_memset (line, 0, _COMMAND_LINE_LEN);
+					os_memcpy (line, pThis->ring_buf + header + 1, pThis->ring_buf[header]);
 				} else {
 					int part0 = _RING_HISTORY_LEN - header - 1;
-					memset (line, 0, _COMMAND_LINE_LEN);
-					memcpy (line, pThis->ring_buf + header + 1, part0);
-					memcpy (line + part0, pThis->ring_buf, pThis->ring_buf[header] - part0);
+					os_memset (line, 0, _COMMAND_LINE_LEN);
+					os_memcpy (line, pThis->ring_buf + header + 1, part0);
+					os_memcpy (line + part0, pThis->ring_buf, pThis->ring_buf[header] - part0);
 				}
 				return pThis->ring_buf[header];
 			}
@@ -161,11 +162,11 @@ static int hist_restore_line (ring_history_t * pThis, char * line, int dir)
 				j++;
 			}
 			if (pThis->ring_buf [header] + header < _RING_HISTORY_LEN) {
-				memcpy (line, pThis->ring_buf + header + 1, pThis->ring_buf[header]);
+				os_memcpy (line, pThis->ring_buf + header + 1, pThis->ring_buf[header]);
 			} else {
 				int part0 = _RING_HISTORY_LEN - header - 1;
-				memcpy (line, pThis->ring_buf + header + 1, part0);
-				memcpy (line + part0, pThis->ring_buf, pThis->ring_buf[header] - part0);
+				os_memcpy (line, pThis->ring_buf + header + 1, part0);
+				os_memcpy (line + part0, pThis->ring_buf, pThis->ring_buf[header] - part0);
 			}
 			return pThis->ring_buf[header];
 		} else {
@@ -186,7 +187,7 @@ static int hist_restore_line (ring_history_t * pThis, char * line, int dir)
 
 //*****************************************************************************
 // split cmdline to tkn array and return nmb of token
-static int split (microrl_t * pThis, int limit, char const ** tkn_arr)
+static int ICACHE_FLASH_ATTR split (microrl_t * pThis, int limit, char const ** tkn_arr)
 {
 	int i = 0;
 	int ind = 0;
@@ -233,7 +234,7 @@ inline static void terminal_newline (microrl_t * pThis)
 // convert 16 bit value to string
 // 0 value not supported!!! just make empty string
 // Returns pointer to a buffer tail
-static char *u16bit_to_str (unsigned int nmb, char * buf)
+static char * ICACHE_FLASH_ATTR u16bit_to_str (unsigned int nmb, char * buf)
 {
 	char tmp_str [6] = {0,};
 	int i = 0, j;
@@ -253,7 +254,7 @@ static char *u16bit_to_str (unsigned int nmb, char * buf)
 
 //*****************************************************************************
 // set cursor at position from begin cmdline (after prompt) + offset
-static void terminal_move_cursor (microrl_t * pThis, int offset)
+static void ICACHE_FLASH_ATTR terminal_move_cursor (microrl_t * pThis, int offset)
 {
 	char str[16] = {0,};
 #ifdef _USE_LIBC_STDIO
@@ -264,13 +265,13 @@ static void terminal_move_cursor (microrl_t * pThis, int offset)
 	}
 #else
 	char *endstr;
-	strcpy (str, "\033[");
+	os_strcpy (str, "\033[");
 	if (offset > 0) {
 		endstr = u16bit_to_str (offset, str+2);
-		strcpy (endstr, "C");
+		os_strcpy (endstr, "C");
 	} else if (offset < 0) {
 		endstr = u16bit_to_str (-(offset), str+2);
-		strcpy (endstr, "D");
+		os_strcpy (endstr, "D");
 	} else
 		return;
 #endif
@@ -278,7 +279,7 @@ static void terminal_move_cursor (microrl_t * pThis, int offset)
 }
 
 //*****************************************************************************
-static void terminal_reset_cursor (microrl_t * pThis)
+static void ICACHE_FLASH_ATTR terminal_reset_cursor (microrl_t * pThis)
 {
 	char str[16];
 #ifdef _USE_LIBC_STDIO
@@ -287,18 +288,18 @@ static void terminal_reset_cursor (microrl_t * pThis)
 
 #else
 	char *endstr;
-	strcpy (str, "\033[");
+	os_strcpy (str, "\033[");
 	endstr = u16bit_to_str ( _COMMAND_LINE_LEN + pThis->prompt_str_len + 2,str+2);
-	strcpy (endstr, "D\033["); endstr += 3;
+	os_strcpy (endstr, "D\033["); endstr += 3;
 	endstr = u16bit_to_str (pThis->prompt_str_len, endstr);
-	strcpy (endstr, "C");
+	os_strcpy (endstr, "C");
 #endif
 	pThis->print (str);
 }
 
 //*****************************************************************************
 // print cmdline to screen, replace '\0' to wihitespace
-static void terminal_print_line (microrl_t * pThis, int pos, int cursor)
+static void ICACHE_FLASH_ATTR terminal_print_line (microrl_t * pThis, int pos, int cursor)
 {
 	pThis->print ("\033[K");    // delete all from cursor to end
 
@@ -316,11 +317,11 @@ static void terminal_print_line (microrl_t * pThis, int pos, int cursor)
 }
 
 //*****************************************************************************
-void microrl_init (microrl_t * pThis, void (*print) (const char *))
+void ICACHE_FLASH_ATTR microrl_init (microrl_t * pThis, void (*print) (const char *))
 {
-	memset(pThis->cmdline, 0, _COMMAND_LINE_LEN);
+	os_memset(pThis->cmdline, 0, _COMMAND_LINE_LEN);
 #ifdef _USE_HISTORY
-	memset(pThis->ring_hist.ring_buf, 0, _RING_HISTORY_LEN);
+	os_memset(pThis->ring_hist.ring_buf, 0, _RING_HISTORY_LEN);
 	pThis->ring_hist.begin = 0;
 	pThis->ring_hist.end = 0;
 	pThis->ring_hist.cur = 0;
@@ -341,7 +342,7 @@ void microrl_init (microrl_t * pThis, void (*print) (const char *))
 }
 
 //*****************************************************************************
-void microrl_set_prompt_str (microrl_t * pThis, const char *prompt_str, int prompt_str_len)
+void ICACHE_FLASH_ATTR microrl_set_prompt_str (microrl_t * pThis, const char *prompt_str, int prompt_str_len)
 {
 	pThis->prompt_str = prompt_str;
 	pThis->prompt_str_len = prompt_str_len;
@@ -349,26 +350,26 @@ void microrl_set_prompt_str (microrl_t * pThis, const char *prompt_str, int prom
 }
 
 //*****************************************************************************
-void microrl_set_complete_callback (microrl_t * pThis, char ** (*get_completion)(int, const char* const*))
+void ICACHE_FLASH_ATTR microrl_set_complete_callback (microrl_t * pThis, char ** (*get_completion)(int, const char* const*))
 {
 	pThis->get_completion = get_completion;
 }
 
 //*****************************************************************************
-void microrl_set_execute_callback (microrl_t * pThis, int (*execute)(const char *line))
+void ICACHE_FLASH_ATTR microrl_set_execute_callback (microrl_t * pThis, int (*execute)(const char *line))
 {
 	pThis->execute = execute;
 }
 #ifdef _USE_CTLR_C
 //*****************************************************************************
-void microrl_set_sigint_callback (microrl_t * pThis, void (*sigintf)(void))
+void ICACHE_FLASH_ATTR microrl_set_sigint_callback (microrl_t * pThis, void (*sigintf)(void))
 {
 	pThis->sigint = sigintf;
 }
 #endif
 
-#ifdef _USE_ESC_SEQ
-static void hist_search (microrl_t * pThis, int dir)
+#ifdef _USE_HISTORY
+static void ICACHE_FLASH_ATTR hist_search (microrl_t * pThis, int dir)
 {
 	int len = hist_restore_line (&pThis->ring_hist, pThis->cmdline, dir);
 	if (len >= 0) {
@@ -377,10 +378,12 @@ static void hist_search (microrl_t * pThis, int dir)
 		terminal_print_line (pThis, 0, pThis->cursor);
 	}
 }
+#endif
 
+#ifdef _USE_ESC_SEQ
 //*****************************************************************************
 // handling escape sequences
-static int escape_process (microrl_t * pThis, char ch)
+static int ICACHE_FLASH_ATTR escape_process (microrl_t * pThis, char ch)
 {
 	if (ch == '[') {
 		pThis->escape_seq = _ESC_BRACKET;
@@ -434,11 +437,11 @@ static int escape_process (microrl_t * pThis, char ch)
 
 //*****************************************************************************
 // insert len char of text at cursor position
-static int microrl_insert_text (microrl_t * pThis, char * text, int len)
+static int ICACHE_FLASH_ATTR microrl_insert_text (microrl_t * pThis, char * text, int len)
 {
 	int i;
 	if (pThis->cmdlen + len < _COMMAND_LINE_LEN) {
-		memmove (pThis->cmdline + pThis->cursor + len,
+		os_memmove (pThis->cmdline + pThis->cursor + len,
 						 pThis->cmdline + pThis->cursor,
 						 pThis->cmdlen - pThis->cursor);
 		for (i = 0; i < len; i++) {
@@ -457,11 +460,11 @@ static int microrl_insert_text (microrl_t * pThis, char * text, int len)
 
 //*****************************************************************************
 // remove one char at cursor
-static void microrl_backspace (microrl_t * pThis)
+static void ICACHE_FLASH_ATTR microrl_backspace (microrl_t * pThis)
 {
 	if (pThis->cursor > 0) {
 		terminal_backspace (pThis);
-		memmove (pThis->cmdline + pThis->cursor-1,
+		os_memmove (pThis->cmdline + pThis->cursor-1,
 						 pThis->cmdline + pThis->cursor,
 						 pThis->cmdlen-pThis->cursor+1);
 		pThis->cursor--;
@@ -474,7 +477,7 @@ static void microrl_backspace (microrl_t * pThis)
 #ifdef _USE_COMPLETE
 
 //*****************************************************************************
-static int common_len (char ** arr)
+static int ICACHE_FLASH_ATTR common_len (char ** arr)
 {
 	int len = 0;
 	int i = 1;
@@ -492,7 +495,7 @@ static int common_len (char ** arr)
 }
 
 //*****************************************************************************
-static void microrl_get_complite (microrl_t * pThis)
+static void ICACHE_FLASH_ATTR microrl_get_complite (microrl_t * pThis)
 {
 	char const * tkn_arr[_COMMAND_TOKEN_NMB];
 	char ** compl_token;
@@ -535,7 +538,7 @@ static void microrl_get_complite (microrl_t * pThis)
 #endif
 
 //*****************************************************************************
-void new_line_handler(microrl_t * pThis){
+void ICACHE_FLASH_ATTR new_line_handler(microrl_t * pThis){
 	char const * tkn_arr [_COMMAND_TOKEN_NMB];
 	int status;
 
@@ -560,7 +563,7 @@ void new_line_handler(microrl_t * pThis){
 	//print_prompt (pThis);
 	pThis->cmdlen = 0;
 	pThis->cursor = 0;
-	memset(pThis->cmdline, 0, _COMMAND_LINE_LEN);
+	os_memset(pThis->cmdline, 0, _COMMAND_LINE_LEN);
 #ifdef _USE_HISTORY
 	pThis->ring_hist.cur = 0;
 #endif
@@ -568,7 +571,7 @@ void new_line_handler(microrl_t * pThis){
 
 //*****************************************************************************
 
-void microrl_insert_char (microrl_t * pThis, int ch)
+void ICACHE_FLASH_ATTR microrl_insert_char (microrl_t * pThis, int ch)
 {
 #ifdef _USE_ESC_SEQ
 	if (pThis->escape) {

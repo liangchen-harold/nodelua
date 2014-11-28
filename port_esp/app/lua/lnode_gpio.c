@@ -32,7 +32,7 @@ struct Pin
     uint32_t mux;
     uint8_t func;
 };
-static struct Pin pins[] = {
+static const struct Pin pins[] = {
     {PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0},
     {PERIPHS_IO_MUX_U0TXD_U, FUNC_GPIO1}, //TXD
     {PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2},
@@ -120,5 +120,14 @@ for i = 1,10000 do print(i .. ":" .. node.free()) node.wdt() collectgarbage() en
 for i = 1,1000000 do end
 
 t={{0,0}, {2,0}, {4,0}, {5,0}, {12,0}, {13,0}, {14,0}, {15,1}}
-table.foreach(t, function(i, v) gpio.mode(v[1],gpio.OUTPUT) gpio.write(v[1], v[2]) end)
+table.foreach(t, function(j, v) gpio.mode(v[1],gpio.OUTPUT) gpio.write(v[1], v[2]) end)
+
+table.foreach(socket, function(i, v) print(i .. ":") print(v) end)
+a=net.createConnection(net.TCP, "aaaa", 80)
+a:connect()
+
+t={{0,0}, {2,0}, {4,0}, {5,0}, {12,0}, {13,0}, {14,0}, {15,1}}
+for i = 1,10000 do print(i .. ":" .. node.free()) node.wdt() collectgarbage()
+table.foreach(t, function(j, v) gpio.mode(v[1],gpio.OUTPUT) gpio.write(v[1], v[2]) end)
+end
 */

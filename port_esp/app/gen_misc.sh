@@ -3,7 +3,7 @@ make
 if [ $? == 0 ];then
 rm ../bin/eagle.app.v6.flash.bin ../bin/eagle.app.v6.irom0text.bin ../bin/eagle.app.v6.dump ../bin/eagle.app.v6.S
 
-cd .output/eagle/debug/image
+cd .output/eagle/release/image
 
 xt-objdump -x -s eagle.app.v6.out > ../../../../../bin/eagle.app.v6.dump
 xt-objdump -S eagle.app.v6.out > ../../../../../bin/eagle.app.v6.S
