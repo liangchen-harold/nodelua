@@ -41,9 +41,38 @@ static const luaL_Reg lnode_node_lib[] = {
 
 /* }====================================================== */
 
-
+const char * object = "Object = {} \
+Object.meta = {__index = Object} \
+function Object:create() \
+  local meta = rawget(self, 'meta') \
+  if not meta then error('inherit err 1') end \
+  return setmetatable({}, meta) \
+end \
+function Object:new(...) \
+  local obj = self:create() \
+  if type(obj.initialize) == 'function' then \
+    obj:initialize(...) \
+  end \
+  return obj \
+end \
+function Object:extend() \
+  local obj = self:create() \
+  local meta = {} \
+  for k, v in pairs(self.meta) do \
+    meta[k] = v \
+  end \
+  meta.__index = obj \
+  meta.super=self \
+  obj.meta = meta \
+  return obj \
+end \
+";
 
 LUALIB_API int luaopen_lnode_node (lua_State *L) {
-  luaL_register(L, LUA_LNODE_NODE_NAME, lnode_node_lib);
-  return 1;
+    luaL_register(L, LUA_LNODE_NODE_NAME, lnode_node_lib);
+
+    luaL_loadbuffer(L, object, strlen(object), "");
+    lua_pcall(L, 0, 0, lua_gettop(L));
+
+    return 1;
 }

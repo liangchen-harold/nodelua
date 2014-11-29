@@ -18,6 +18,8 @@
 #define LUA_LNODE_NODE_NAME	"node"
 LUALIB_API int (luaopen_lnode_node) (lua_State *L);
 
+LUALIB_API int (luaopen_lnode_emitter) (lua_State *L);
+
 #define LUA_LNODE_GPIO_NAME	"gpio"
 LUALIB_API int (luaopen_lnode_gpio) (lua_State *L);
 

@@ -117,14 +117,18 @@ LUALIB_API int luaopen_lnode_gpio (lua_State *L) {
 
 /* Testing code:
 for i = 1,10000 do print(i .. ":" .. node.free()) node.wdt() collectgarbage() end
-for i = 1,1000000 do end
+for i = 1,1000000 do node.wdt() collectgarbage() end
+
+print(node.free()) collectgarbage() print(node.free())
 
 t={{0,0}, {2,0}, {4,0}, {5,0}, {12,0}, {13,0}, {14,0}, {15,1}}
 table.foreach(t, function(j, v) gpio.mode(v[1],gpio.OUTPUT) gpio.write(v[1], v[2]) end)
 
 table.foreach(socket, function(i, v) print(i .. ":") print(v) end)
-a=net.createConnection(net.TCP, "aaaa", 80)
-a:connect()
+host="www.qq.com" a=net.createConnection(net.TCP)
+a:connect(host, 80)
+a:send("GET / HTTP/1.1\r\nHost: " .. host .. "\r\n\r\n")
+a:connect() for i = 1,100 do print(i .. ":" .. node.free()) node.wdt() collectgarbage() end
 
 t={{0,0}, {2,0}, {4,0}, {5,0}, {12,0}, {13,0}, {14,0}, {15,1}}
 for i = 1,10000 do print(i .. ":" .. node.free()) node.wdt() collectgarbage()
