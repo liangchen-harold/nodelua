@@ -41,6 +41,15 @@ static const luaL_Reg lnode_node_lib[] = {
 
 /* }====================================================== */
 
+void lua_checkself(lua_State *L)
+{
+    if (!lua_istable(L, 1))
+    {
+        luaL_error(L, "self?");
+    }
+}
+
+
 const char * object = "Object = {} \
 Object.meta = {__index = Object} \
 function Object:create() \

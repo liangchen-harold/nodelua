@@ -34,10 +34,10 @@ int ICACHE_FLASH_ATTR lnode_emitter_gc(lua_State* L) {
 
 int ICACHE_FLASH_ATTR lnode_emitter_initialize(lua_State* L) {
 
-    void *p = lua_newuserdata(L,sizeof(Emitter));
-    lua_setfield(L,-2, "cb");
+    lua_newtable(L);
+    lua_setfield(L, 1, "cb");
 
-    __printf("## emitter:initialize udata=0x%08X\n", p);
+    __printf("## emitter:initialize\n");
 
     // luaL_getmetatable(L, "Emitter.meta");
     // lua_setmetatable(L, -2);
@@ -47,25 +47,42 @@ int ICACHE_FLASH_ATTR lnode_emitter_initialize(lua_State* L) {
 
 static int ICACHE_FLASH_ATTR lnode_emitter_on (lua_State *L)
 {
-    if (!lua_istable(L, 1))
-    {
-        luaL_error(L, "self?");
-        return 0;
-    }
+    lua_checkself(L);
 
     lua_getfield(L, 1, "cb");
-    Emitter *s = (Emitter *)lua_touserdata(L, -1);
-
-    const char *event = luaL_checkstring(L, 2);
-    __printf("0x%08X %s\n", s, event);
+    lua_pushvalue(L, 2); //event name as the second params of :on
+    lua_pushvalue(L, 3); //event callback as the third params of :on
+    lua_settable(L, -3);
 
     return 0;
 }
 
 static int ICACHE_FLASH_ATTR lnode_emitter_emit (lua_State *L)
 {
-    Emitter *s = (Emitter *)luaL_checkudata(L, 1, "Emitter.meta");
-    const char *event = luaL_checkstring(L, 2);
+    lua_checkself(L);
+    int varargs = lua_gettop(L);
+
+    lua_getfield(L, 1, "cb");
+    lua_pushvalue(L, 2); //event name as the second params of :on
+    lua_gettable(L, -2);
+    if (lua_isfunction(L, -1) != 1)
+    {
+        luaL_error(L, "err3");
+    }
+    // :emit("event", ...)
+    int i;
+    for (i = 3; i <= varargs; i ++)
+    {
+        lua_pushvalue(L, i);
+    }
+    /* do the call (varargs-2 arguments, 0 result) */
+    if (lua_pcall(L, varargs-2, 0, 0) != 0)
+    {
+        const char *msg = lua_tostring(L, -1);
+        if (msg == NULL) msg = "err4";
+        luaL_error(L, msg);
+        lua_pop(L, 1);
+    }
 
     return 0;
 }
@@ -92,14 +109,12 @@ LUALIB_API int luaopen_lnode_emitter (lua_State *L) {
     if (lua_isfunction(L, -1) != 1)
     {
         luaL_error(L, "err1");
-        return 0;
     }
     lua_getglobal(L, "Object"); //Object is the first argument as 'self'
     /* do the call (1 arguments, 1 result) */
     if (lua_pcall(L, 1, 1, 0) != 0)
     {
         luaL_error(L, "err2");
-        return 0;
     }
     //Emitter.funcs <= lnode_emitter_methods
     luaL_register(L, NULL, lnode_emitter_methods); // register functions in the metatable

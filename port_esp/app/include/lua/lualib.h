@@ -28,6 +28,7 @@ LUALIB_API int (luaopen_lnode_wifi) (lua_State *L);
 
 #define LUA_LNODE_NET_NAME	"net"
 LUALIB_API int (luaopen_lnode_net) (lua_State *L);
+LUALIB_API int (luaopen_lnode_net_socket) (lua_State *L);
 
 #define LUA_COLIBNAME	"coroutine"
 LUALIB_API int (luaopen_base) (lua_State *L);
