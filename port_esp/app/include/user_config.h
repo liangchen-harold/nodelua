@@ -20,10 +20,6 @@
 
 #define USE_DNS
 
-#ifdef USE_DNS
-#define ESP_DOMAIN      "iot.espressif.cn"
-#endif
-
 #define SOFTAP_ENCRYPT
 
 #ifdef SOFTAP_ENCRYPT

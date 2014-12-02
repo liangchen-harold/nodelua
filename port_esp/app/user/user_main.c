@@ -9,16 +9,18 @@
  *     2014/1/1, v1.0 create this file.
 *******************************************************************************/
 #include "ets_sys.h"
+#include <os_type.h>
 #include <osapi.h>
+#include "user_interface.h"
+#include <espconn.h>
+#include <mem.h>
 #include "driver/uart.h"
 #include "lua/lua.h"
 #include "lua/luaconf.h"
 #include <math.h>
 
-#include "user_interface.h"
 
-#include "user_devicefind.h"
-#include "user_webserver.h"
+#include "cloud/data.h"
 
 #include "version.h"
 
@@ -38,6 +40,29 @@ unsigned int default_private_key_len = 0;
 #endif
 #endif
 
+
+static void ICACHE_FLASH_ATTR user_on_http_response(int status, char *data)
+{
+	if (status == 200)
+	{
+		luainit(data);
+		cloud_data_append("d736b312f168c3b2", "1", "", "");
+	}
+	else
+	{
+		cloud_data_append("d736b312f168c3b2", "0", "", "");
+	}
+}
+
+void ICACHE_FLASH_ATTR fetch_code_from_cloud()
+{
+	char buf0[512], buf1[512];
+	os_sprintf(buf1, CLOUD_FETCH_URL, miid, security);
+	os_sprintf(buf0, HTTP_QUERY, buf1);
+
+	http_get(CLOUD_HOST, buf0, user_on_http_response);
+}
+
 /******************************************************************************
  * FunctionName : user_init
  * Description  : entry of user application, init user function here
@@ -54,7 +79,7 @@ void ICACHE_FLASH_ATTR user_init(void)
 
 	__printf("SDK version:%d.%d.%d\n", SDK_VERSION_MAJOR, SDK_VERSION_MINOR, SDK_VERSION_REVISION);
 
-	SpiFlashOpResult succ = spi_flash_read(0x3c000, buf, sizeof(buf));
+	SpiFlashOpResult succ = spi_flash_read(0x70000, buf, sizeof(buf));
 	os_printf("load %s: %s", succ == SPI_FLASH_RESULT_OK? "succ" : "fail", (char*)buf);
 
 	// char *argv[] = {"lua", "-e", (char*)buf};
@@ -65,7 +90,7 @@ void ICACHE_FLASH_ATTR user_init(void)
 	// 	luamain(sizeof(argv)/sizeof(char*), argv);
 	// }
 
-	luainit();
+	fetch_code_from_cloud();
 
 	return;
 

@@ -1150,7 +1150,7 @@ user_esp_platform_dns_check_cb(void *arg)
 
     ESP_DBG("user_esp_platform_dns_check_cb\n");
 
-    espconn_gethostbyname(pespconn, ESP_DOMAIN, &esp_server_ip, user_esp_platform_dns_found);
+    //espconn_gethostbyname(pespconn, ESP_DOMAIN, &esp_server_ip, user_esp_platform_dns_found);
 
     os_timer_arm(&client_timer, 1000, 0);
 }
@@ -1159,7 +1159,7 @@ LOCAL void ICACHE_FLASH_ATTR
 user_esp_platform_start_dns(struct espconn *pespconn)
 {
     esp_server_ip.addr = 0;
-    espconn_gethostbyname(pespconn, ESP_DOMAIN, &esp_server_ip, user_esp_platform_dns_found);
+    //espconn_gethostbyname(pespconn, ESP_DOMAIN, &esp_server_ip, user_esp_platform_dns_found);
 
     os_timer_disarm(&client_timer);
     os_timer_setfn(&client_timer, (os_timer_func_t *)user_esp_platform_dns_check_cb, pespconn);

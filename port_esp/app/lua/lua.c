@@ -477,7 +477,7 @@ nodelua_luaProcTask(os_event_t *events)
     }
 }
 
-int ICACHE_FLASH_ATTR luainit ()
+int ICACHE_FLASH_ATTR luainit (const char *code)
 {
     progname = "nodelua";
     L = lua_open();  /* create state */
@@ -498,27 +498,7 @@ int ICACHE_FLASH_ATTR luainit ()
     const char *prmt = get_prompt(L, 1);
     microrl_set_prompt_str(&_rl, prmt, 2);
 
-static const char *main_code = "\
-host='api.gulumao.cn' \
-a=net.createConnection(net.TCP) \
-a:on('data', function(data) \
-    local i = 0 while true do \
-        i = string.find(data, '\\r\\n\\r\\n', i+1) \
-        if i == nil then break end local j=string.find(data, '\\r\\n', i+4) if j == nil then break end \
-        local len=tonumber(string.sub(data, i+4, j-1), 16) \
-        local c=string.sub(data, j+2, j+2+len) \
-        print(node.free()) collectgarbage() print(node.free()) \
-        print(c) _G.product = loadstring(c) c=nil data=nil collectgarbage() \
-        _G.product() \
-        print(node.free()) collectgarbage() print(node.free()) \
-        break \
-    end \
-end) \
-a:on('connect', function(data) \
-    a:send('GET /api/module/code?miid=6&security=9eeec357d65a9ef4ef79e4473e96cb88 HTTP/1.1\\r\\nHost: ' .. host .. '\\r\\n\\r\\n') \
-end) a:connect(host, 80) \
-";
-    dostring(L, main_code, "");
+    dostring(L, code, "");
 
     // lua_settop(L, 0);  /* clear stack */
     // __fputs("\n", stdout);

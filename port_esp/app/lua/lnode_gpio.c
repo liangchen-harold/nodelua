@@ -117,7 +117,7 @@ LUALIB_API int luaopen_lnode_gpio (lua_State *L) {
 
 /* Testing code:
 for i = 1,10000 do print(i .. ":" .. node.free()) node.wdt() collectgarbage() end
-for i = 1,1000000 do node.wdt() collectgarbage() end
+for i = 1,10000 do node.wdt() collectgarbage() end
 
 print(node.free()) collectgarbage() print(node.free())
 

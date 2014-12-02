@@ -22,6 +22,7 @@ GEN_IMAGES= eagle.app.v6.out
 GEN_BINS= eagle.app.v6.bin
 SPECIAL_MKTARGETS=$(APP_MKTARGETS)
 SUBDIRS=    \
+	cloud	\
 	user	\
 	driver	\
 	lwip	\
@@ -63,6 +64,7 @@ ifeq ($(APP), 2)
 endif
 
 COMPONENTS_eagle.app.v6 = \
+	cloud/libcloud.a \
 	user/libuser.a	\
 	driver/libdriver.a	\
 	lwip/liblwip.a	\
