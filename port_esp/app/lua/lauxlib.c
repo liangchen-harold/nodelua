@@ -641,7 +641,7 @@ static void * ICACHE_FLASH_ATTR l_alloc (void *ud, void *ptr, size_t osize, size
   {
 	if (*used + (nsize - osize) > LUA_MAX_HEAP)
 	{
-		__printf("failed to alloc %d memory!(%d / %d)\n", nsize, *used, LUA_MAX_HEAP);
+		__printf("failed to alloc %d memory!(%d / %d) sys.free=%d\n", nsize, *used, LUA_MAX_HEAP, system_get_free_heap_size());
 		return NULL;
 	}
     if (ptr != NULL)

@@ -588,6 +588,13 @@ void ICACHE_FLASH_ATTR luaV_execute (lua_State *L, int nexeccalls) {
         int nresults = GETARG_C(i) - 1;
         if (b != 0) L->top = ra+b;  /* else previous instruction set top */
         L->savedpc = pc;
+
+        //TODO: add by lcsky to prevent OOF. But why gc never run automatically?
+        if (system_get_free_heap_size() < 4096)
+        {
+            lua_gc(L, LUA_GCCOLLECT, 0);
+        }
+
         switch (luaD_precall(L, ra, nresults)) {
           case PCRLUA: {
             nexeccalls++;

@@ -124,14 +124,8 @@ print(node.free()) collectgarbage() print(node.free())
 t={{0,0}, {2,0}, {4,0}, {5,0}, {12,0}, {13,0}, {14,0}, {15,1}}
 table.foreach(t, function(j, v) gpio.mode(v[1],gpio.OUTPUT) gpio.write(v[1], v[2]) end)
 
-table.foreach(a, function(i, v) print(i .. ":") print(v) end)
-host="www.qq.com" a=net.createConnection(net.TCP) a:on("data", function(data) print(string.len(data)) end)
-a:connect(host, 80)
-a:send("GET / HTTP/1.1\r\nHost: " .. host .. "\r\n\r\n")
-a:connect() for i = 1,100 do print(i .. ":" .. node.free()) node.wdt() collectgarbage() end
-
 t={{0,0}, {2,0}, {4,0}, {5,0}, {12,0}, {13,0}, {14,0}, {15,1}}
 for i = 1,10000 do print(i .. ":" .. node.free()) node.wdt() collectgarbage()
-table.foreach(t, function(j, v) gpio.mode(v[1],gpio.OUTPUT) gpio.write(v[1], v[2]) end)
+table.foreach(_G, function(j, v) gpio.mode(v[1],gpio.OUTPUT) gpio.write(1, i%2) end)
 end
 */

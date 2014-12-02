@@ -23,22 +23,16 @@
 #include "lua/lnode_net.h"
 
 typedef struct {
-    lua_State* L;
-    int r;
-//  uv_getaddrinfo_t handle;
-} luv_dns_ref_t;
-
-typedef struct {
     struct espconn *pConn;
 } Socket;
 
 ip_addr_t dummy_ip;
 
 /* Utility for storing the callback in the dns_req token */
-static luv_dns_ref_t* ICACHE_FLASH_ATTR luv_dns_store_callback(lua_State* L, int index) {
-  luv_dns_ref_t* ref;
+static ref_t* ICACHE_FLASH_ATTR luv_dns_store_callback(lua_State* L, int index) {
+  ref_t* ref;
 
-  ref = (luv_dns_ref_t*)os_malloc(sizeof(luv_dns_ref_t));
+  ref = (ref_t*)os_malloc(sizeof(ref_t));
   ref->L = L;
   if (lua_isfunction(L, index)) {
     lua_pushvalue(L, index); /* Store the callback */
@@ -47,7 +41,7 @@ static luv_dns_ref_t* ICACHE_FLASH_ATTR luv_dns_store_callback(lua_State* L, int
   return ref;
 }
 
-static void ICACHE_FLASH_ATTR luv_dns_ref_cleanup(luv_dns_ref_t *ref)
+static void ICACHE_FLASH_ATTR luv_dns_ref_cleanup(ref_t *ref)
 {
     if (ref != NULL)
     {
@@ -55,7 +49,7 @@ static void ICACHE_FLASH_ATTR luv_dns_ref_cleanup(luv_dns_ref_t *ref)
     }
 }
 
-static void ICACHE_FLASH_ATTR luv_dns_get_callback(luv_dns_ref_t *ref)
+static void ICACHE_FLASH_ATTR luv_dns_get_callback(ref_t *ref)
 {
   lua_State *L = ref->L;
   lua_rawgeti(L, LUA_REGISTRYINDEX, ref->r);
@@ -78,7 +72,7 @@ on_dns_found(const char *name, ip_addr_t *ipaddr, void *arg)
 {
     struct espconn *pespconn = (struct espconn *)arg;
 
-    luv_dns_ref_t *ref = (luv_dns_ref_t *)pespconn->reverse;
+    ref_t *ref = (ref_t *)pespconn->reverse;
 
     if (ipaddr != NULL)
     {
@@ -105,7 +99,7 @@ on_dns_found(const char *name, ip_addr_t *ipaddr, void *arg)
 static int ICACHE_FLASH_ATTR lnode_net_dns (lua_State *L)
 {
     const char* host = luaL_checkstring(L, 1);
-    luv_dns_ref_t *ref = luv_dns_store_callback(L, 2);
+    ref_t *ref = luv_dns_store_callback(L, 2);
 
     struct espconn *pCon = (struct espconn *)os_zalloc(sizeof(struct espconn));
     pCon->type = ESPCONN_TCP;
@@ -126,14 +120,14 @@ static int ICACHE_FLASH_ATTR lnode_net_createConnection (lua_State *L)
      *
      */
     //temp=Socket:new()
-    lua_getglobal(L, "socket");
+    lua_getglobal(L, "Socket");
     lua_pushstring(L, "new");
     lua_gettable(L, -2);
     if (lua_isfunction(L, -1) != 1)
     {
         luaL_error(L, "err1");
     }
-    lua_getglobal(L, "socket"); //Object is the first argument as 'self'
+    lua_getglobal(L, "Socket"); //Object is the first argument as 'self'
     lua_pushinteger(L, protocol);
     /* do the call (2 arguments, 1 result) */
     if (lua_pcall(L, 2, 1, 0) != 0)
@@ -165,4 +159,19 @@ LUALIB_API int luaopen_lnode_net (lua_State *L) {
 }
 
 /* Testing code:
+
+print(node.free()) collectgarbage() print(node.free())
+
+host="api.gulumao.cn" a=net.createConnection(net.TCP)
+a:on("data", function(data) local i = 0 while true do i = string.find(data, "\r\n\r\n", i+1)
+if i == nil then break end local j=string.find(data, "\r\n", i+4) if j == nil then break end
+local len=tonumber(string.sub(data, i+4, j-1), 16) local c=string.sub(data, j+2, j+2+len)
+print(c) _G.product = loadstring(c) _G.product():config() end end)
+a:on("connect", function(data)
+    a:send("GET /api/module/code?miid=6&security=9eeec357d65a9ef4ef79e4473e96cb88 HTTP/1.1\r\nHost: " .. host .. "\r\n\r\n")
+end) a:connect(host, 80)
+a:connect() for i = 1,100 do print(i .. ":" .. node.free()) node.wdt() collectgarbage() end
+
+
+
 */

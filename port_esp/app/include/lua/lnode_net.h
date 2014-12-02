@@ -13,6 +13,11 @@ enum Protocol {
     UDP,
 };
 
+typedef struct {
+    lua_State* L;
+    int r;
+} ref_t;
+
 extern ip_addr_t dummy_ip;
 
 void lua_checkself(lua_State *L);

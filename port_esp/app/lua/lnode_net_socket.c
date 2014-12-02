@@ -55,9 +55,35 @@ static void ICACHE_FLASH_ATTR tcpclient_recv_cb(void *arg, char *pdata, unsigned
 {
     struct espconn *pConn = (struct espconn *)arg;
 
-    __printf("tcp client recv %d bytes\n", len);
-    // __printf("\n\ntcp client recv: \n\n");
-    // __fputs(pdata, 0);
+    ref_t *ref = (ref_t *)pConn->reverse;
+    lua_State *L = ref->L;
+    //get the self
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ref->r);
+    //luaL_unref(ref->L, LUA_REGISTRYINDEX, ref->r); //TODO: free
+
+    lua_pushstring(L, "emit");
+    lua_gettable(L, -2);
+    if (lua_isfunction(L, -1) != 1)
+    {
+        luaL_error(L, "err1");
+    }
+    //push self
+    lua_pushvalue(L, -2);
+    //push event
+    lua_pushstring(L, "data");
+    //push data
+    lua_pushlstring(L, pdata, len);
+    //lua_pushinteger(L, len);
+    /* do the call (3 arguments, 0 result) */
+    if (lua_pcall(L, 3, 0, 0) != 0)
+    {
+        const char *msg = lua_tostring(L, -1);
+        if (msg == NULL) msg = "err2";
+        luaL_error(L, msg);
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
+    // __printf("tcp client recv %d bytes\n", len);
 }
 
 /**
@@ -74,6 +100,33 @@ static void ICACHE_FLASH_ATTR tcpclient_connect_cb(void *arg)
     espconn_regist_disconcb(pConn, tcpclient_discon_cb);
     espconn_regist_recvcb(pConn, tcpclient_recv_cb);////////
     //espconn_regist_sentcb(pConn, tcpclient_sent_cb);///////
+
+    //call emit: "connect"
+    ref_t *ref = (ref_t *)pConn->reverse;
+    lua_State *L = ref->L;
+    //get the self
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ref->r);
+    //luaL_unref(ref->L, LUA_REGISTRYINDEX, ref->r); //TODO: free
+
+    lua_pushstring(L, "emit");
+    lua_gettable(L, -2);
+    if (lua_isfunction(L, -1) != 1)
+    {
+        luaL_error(L, "err1");
+    }
+    //push self
+    lua_pushvalue(L, -2);
+    //push event
+    lua_pushstring(L, "connect");
+    /* do the call (2 arguments, 0 result) */
+    if (lua_pcall(L, 2, 0, 0) != 0)
+    {
+        const char *msg = lua_tostring(L, -1);
+        if (msg == NULL) msg = "err2";
+        luaL_error(L, msg);
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
 }
 
 static void ICACHE_FLASH_ATTR tcpclient_recon_cb(void *arg, sint8 errType)
@@ -94,18 +147,16 @@ int ICACHE_FLASH_ATTR lnode_net_socket_initialize(lua_State* L)
     if (lua_isfunction(L, -1) != 1)
     {
         luaL_error(L, "err1");
-        return 0;
     }
     lua_pushvalue(L, 1); //self
     /* do the call (1 arguments, 0 result) */
     if (lua_pcall(L, 1, 0, 0) != 0)
     {
         luaL_error(L, "err2");
-        return 0;
     }
 
     Socket *s = lua_newuserdata(L,sizeof(Socket));
-    lua_setfield(L, 1, "socket");
+    lua_setfield(L, 1, "rawsocket");
 
     __printf("## net_socket:initialize udata=0x%08X\n", s);
 
@@ -126,7 +177,12 @@ int ICACHE_FLASH_ATTR lnode_net_socket_initialize(lua_State* L)
         s->pConn->proto.udp = (esp_udp *)os_zalloc(sizeof(esp_udp));
         s->pConn->proto.udp->local_port = espconn_port();
     }
-    __printf("At: 0x%08X\n", s);
+
+    ref_t *ref = (ref_t*)os_malloc(sizeof(ref_t)); //TODO: free!
+    ref->L = L;
+    lua_pushvalue(L, 1); /* Store the self */
+    ref->r = luaL_ref(L, LUA_REGISTRYINDEX);
+    s->pConn->reverse = ref;
 
     return 0;
 }
@@ -134,7 +190,7 @@ int ICACHE_FLASH_ATTR lnode_net_socket_initialize(lua_State* L)
 int ICACHE_FLASH_ATTR lnode_net_socket_gc(lua_State* L) {
     __printf("## __gc\n");
 
-    lua_getfield(L, 1, "socket");
+    lua_getfield(L, 1, "rawsocket");
     Socket *s = (Socket *)lua_touserdata(L, -1);
 
     if (s->pConn->proto.tcp != NULL)
@@ -165,7 +221,7 @@ static void ICACHE_FLASH_ATTR on_dns_found_for_connect(const char *name, ip_addr
 static int ICACHE_FLASH_ATTR lnode_net_socket_connect (lua_State *L)
 {
     lua_checkself(L);
-    lua_getfield(L, 1, "socket");
+    lua_getfield(L, 1, "rawsocket");
     Socket *s = (Socket *)lua_touserdata(L, -1);
     const char *host = luaL_checkstring(L, 2);
     int port = luaL_checkinteger(L, 3);
@@ -191,7 +247,7 @@ static int ICACHE_FLASH_ATTR lnode_net_socket_connect (lua_State *L)
 static int ICACHE_FLASH_ATTR lnode_net_socket_send (lua_State *L)
 {
     lua_checkself(L);
-    lua_getfield(L, 1, "socket");
+    lua_getfield(L, 1, "rawsocket");
     Socket *s = (Socket *)lua_touserdata(L, -1);
     const char *content = luaL_checkstring(L, 2);
 
@@ -222,14 +278,12 @@ LUALIB_API int luaopen_lnode_net_socket (lua_State *L) {
     if (lua_isfunction(L, -1) != 1)
     {
         luaL_error(L, "err1");
-        return 0;
     }
     lua_getglobal(L, "Emitter"); //Object is the first argument as 'self'
     /* do the call (1 arguments, 1 result) */
     if (lua_pcall(L, 1, 1, 0) != 0)
     {
         luaL_error(L, "err2");
-        return 0;
     }
     //Emitter.funcs <= lnode_emitter_methods
     luaL_register(L, NULL, lnode_net_socket_methods); // register functions in the metatable
@@ -239,7 +293,7 @@ LUALIB_API int luaopen_lnode_net_socket (lua_State *L) {
     luaL_register(L, NULL, lnode_net_socket_meta); // register functions in the metatable
     lua_pop(L, 1);
     //_G.net.socket <= temp
-    lua_setglobal(L, "socket");
+    lua_setglobal(L, "Socket");
 
     return 1;
 }
