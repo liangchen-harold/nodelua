@@ -1,3 +1,8 @@
+/******************************************************************************
+ * Copyright 2014 Nodelua.org (chenliang)
+ *
+*******************************************************************************/
+
 #include <osapi.h>
 #include <os_type.h>
 #include "user_interface.h"
@@ -7,6 +12,7 @@
 
 
 ip_addr_t dummy_ip;
+int _active = 0;
 
 typedef struct {
 	char *buf;
@@ -79,8 +85,9 @@ static void ICACHE_FLASH_ATTR cloud_data_on_discon_cb(void *arg)
 	os_free(req);
 	os_free(pConn->proto.tcp);
 	os_free(pConn);
+	_active --;
 
-    __printf("tcp client disconnect\n");
+    __printf("tcp client disconnect(active=%d)\n", _active);
 }
 
 static void ICACHE_FLASH_ATTR cloud_data_on_recon_cb(void *arg, sint8 errType)
@@ -117,7 +124,8 @@ static void ICACHE_FLASH_ATTR cloud_data_on_dns_found(const char *host, ip_addr_
         char buf[16];
         char *p = (char*)&(ipaddr->addr);
         os_memcpy(pespconn->proto.tcp->remote_ip, &(ipaddr->addr), 4);
-        __printf("connection to "IPSTR"...\n", p[0], p[1], p[2], p[3]);
+		_active ++;
+        __printf("connection to "IPSTR"...(active=%d)\n", p[0], p[1], p[2], p[3], _active);
 
         espconn_connect(pespconn);
     }

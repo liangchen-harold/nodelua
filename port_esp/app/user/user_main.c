@@ -1,12 +1,6 @@
 /******************************************************************************
- * Copyright 2013-2014 Espressif Systems (Wuxi)
+ * Copyright 2014 Nodelua.org (chenliang)
  *
- * FileName: user_main.c
- *
- * Description: entry file of user application
- *
- * Modification history:
- *     2014/1/1, v1.0 create this file.
 *******************************************************************************/
 #include "ets_sys.h"
 #include <os_type.h>
@@ -40,6 +34,7 @@ unsigned int default_private_key_len = 0;
 #endif
 #endif
 
+LOCAL os_timer_t check_sta_timer;
 
 static void ICACHE_FLASH_ATTR user_on_http_response(int status, char *data)
 {
@@ -61,6 +56,32 @@ void ICACHE_FLASH_ATTR fetch_code_from_cloud()
 	os_sprintf(buf0, HTTP_QUERY, buf1);
 
 	http_get(CLOUD_HOST, buf0, user_on_http_response);
+}
+
+void ICACHE_FLASH_ATTR user_check_ip(uint8 reset_flag)
+{
+    struct ip_info ipconfig;
+
+    os_timer_disarm(&check_sta_timer);
+
+    wifi_get_ip_info(STATION_IF, &ipconfig);
+
+    if (wifi_station_get_connect_status() == STATION_GOT_IP && ipconfig.ip.addr != 0)
+	{
+		fetch_code_from_cloud();
+    }
+	else
+	{
+        /* if there are wrong while connecting to some AP, then reset mode */
+        if ((wifi_station_get_connect_status() == STATION_WRONG_PASSWORD ||
+                wifi_station_get_connect_status() == STATION_NO_AP_FOUND ||
+                wifi_station_get_connect_status() == STATION_CONNECT_FAIL)) {
+            //user_esp_platform_reset_mode();
+        } else {
+            os_timer_setfn(&check_sta_timer, (os_timer_func_t *)user_check_ip, NULL);
+            os_timer_arm(&check_sta_timer, 100, 0);
+        }
+    }
 }
 
 /******************************************************************************
@@ -90,7 +111,9 @@ void ICACHE_FLASH_ATTR user_init(void)
 	// 	luamain(sizeof(argv)/sizeof(char*), argv);
 	// }
 
-	fetch_code_from_cloud();
+	os_timer_disarm(&check_sta_timer);
+	os_timer_setfn(&check_sta_timer, (os_timer_func_t *)user_check_ip, 1);
+	os_timer_arm(&check_sta_timer, 100, 0);
 
 	return;
 
