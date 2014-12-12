@@ -489,7 +489,9 @@ int ICACHE_FLASH_ATTR luainit (const char *code)
 
     struct Smain *s = (struct Smain *)lua_touserdata(L, 1);
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
+	__printf("Lua state loaded, free mem=%d\n", system_get_free_heap_size());
     luaL_openlibs(L);  /* open libraries */
+	__printf("Lua libs loaded, free mem=%d\n", system_get_free_heap_size());
     lua_gc(L, LUA_GCRESTART, 0);
 
     print_version();
@@ -504,5 +506,6 @@ int ICACHE_FLASH_ATTR luainit (const char *code)
     // __fputs("\n", stdout);
     // lua_close(L);
 
+	lua_gc(L, LUA_GCCOLLECT, 0);
 	system_os_task(nodelua_luaProcTask, nodelua_luaProcTaskPrio, nodelua_luaProcTaskQueue, nodelua_luaProcTaskQueueLen);
 }

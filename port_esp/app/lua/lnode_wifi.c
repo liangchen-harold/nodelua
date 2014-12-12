@@ -7,6 +7,7 @@
 
 #include <os_type.h>
 #include <ets_sys.h>
+#include <mem.h>
 #include <osapi.h>
 #include <user_interface.h>
 #include <espconn.h>
@@ -15,6 +16,7 @@
 #define LUA_LIB
 
 #include "lua/lua.h"
+#include "lua/lnode_net.h"
 #include "lua/portesp.h"
 
 #include "lua/lauxlib.h"
@@ -25,6 +27,60 @@ enum Mode {
     SOFTAP,
     STATIONAP,
 };
+
+//for connect callback
+void ICACHE_FLASH_ATTR wifi_check_ip(void *arg)
+{
+    ref_t *ref = (ref_t *)arg;
+    lua_State *L = ref->L;
+    os_timer_t *pTimer = (os_timer_t*)ref->arg;
+
+
+    struct ip_info ipconfig;
+
+    os_timer_disarm(pTimer);
+
+    wifi_get_ip_info(STATION_IF, &ipconfig);
+
+    if (wifi_station_get_connect_status() == STATION_GOT_IP && ipconfig.ip.addr != 0)
+	{
+        //get the callback
+        lua_rawgeti(L, LUA_REGISTRYINDEX, ref->r);
+
+        /* do the call (0 arguments, 0 result) */
+        if (lua_pcall(L, 0, 0, 0) != 0)
+        {
+            const char *msg = lua_tostring(L, -1);
+            if (msg == NULL) msg = "err2";
+            luaL_error(L, msg);
+            lua_pop(L, 1);
+        }
+
+        //free
+        luaL_unref(L, LUA_REGISTRYINDEX, ref->r);
+        os_free(ref->arg);
+        os_free(ref);
+    }
+	else
+	{
+        /* if there are wrong while connecting to some AP, then reset mode */
+        if ((wifi_station_get_connect_status() == STATION_WRONG_PASSWORD ||
+                wifi_station_get_connect_status() == STATION_NO_AP_FOUND ||
+                wifi_station_get_connect_status() == STATION_CONNECT_FAIL))
+        {
+            //free
+            luaL_unref(L, LUA_REGISTRYINDEX, ref->r);
+            os_free(ref->arg);
+            os_free(ref);
+            __printf("wifi failed!\n");
+        }
+        else
+        {
+            os_timer_setfn(pTimer, (os_timer_func_t *)wifi_check_ip, ref);
+            os_timer_arm(pTimer, 100, 0);
+        }
+    }
+}
 
 static int ICACHE_FLASH_ATTR lnode_wifi_setmode (lua_State *L)
 {
@@ -57,6 +113,7 @@ static int ICACHE_FLASH_ATTR lnode_wifi_sta_config (lua_State *L)
     config.bssid_set = 0;
 
     lua_pushboolean(L, wifi_station_set_config(&config));
+    wifi_station_connect();
     return 1;
 }
 
@@ -83,6 +140,20 @@ static int ICACHE_FLASH_ATTR lnode_wifi_sta_getip (lua_State *L)
 
 static int ICACHE_FLASH_ATTR lnode_wifi_sta_connect (lua_State *L)
 {
+    if (lua_isfunction(L, 1))
+    {
+        ref_t *ref = (ref_t*)os_malloc(sizeof(ref_t));
+        ref->L = L;
+        lua_pushvalue(L, 1); /* Store the callback */
+        ref->r = luaL_ref(L, LUA_REGISTRYINDEX);
+
+        os_timer_t *pTimer = (os_timer_t *)os_zalloc(sizeof(os_timer_t));
+        ref->arg = pTimer;
+
+        os_timer_setfn(pTimer, wifi_check_ip, ref);
+        os_timer_arm(pTimer, 100, 0);
+    }
+
     lua_pushboolean(L, wifi_station_connect());
     return 1;
 }
@@ -91,6 +162,14 @@ static int ICACHE_FLASH_ATTR lnode_wifi_sta_disconnect (lua_State *L)
 {
     lua_pushboolean(L, wifi_station_disconnect());
     return 1;
+}
+
+static int ICACHE_FLASH_ATTR lnode_wifi_sta_dsleep (lua_State *L)
+{
+    int timeus = luaL_checkinteger(L, 1);
+    system_deep_sleep(timeus);
+    //never return
+    return 0;
 }
 
 static int ICACHE_FLASH_ATTR lnode_wifi_sta_autoconnect (lua_State *L)
@@ -107,6 +186,7 @@ static const luaL_Reg lnode_wifi_lib[] = {
   {"connect",          lnode_wifi_sta_connect},
   {"disconnect",       lnode_wifi_sta_disconnect},
   {"autoconnect",      lnode_wifi_sta_autoconnect},
+  {"dsleep",           lnode_wifi_sta_dsleep},
   {NULL, NULL}
 };
 

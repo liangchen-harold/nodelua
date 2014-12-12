@@ -36,16 +36,21 @@ unsigned int default_private_key_len = 0;
 
 LOCAL os_timer_t check_sta_timer;
 
-static void ICACHE_FLASH_ATTR user_on_http_response(int status, char *data)
+static void ICACHE_FLASH_ATTR user_on_http_response(int status, char *data, void *arg)
 {
 	if (status == 200)
 	{
+		__printf("Loading, free mem=%d\n", system_get_free_heap_size());
+
 		luainit(data);
-		cloud_data_append("d736b312f168c3b2", "1", "", "");
+
+		__printf("Loaded, free mem=%d\n", system_get_free_heap_size());
+
+		cloud_data_append("d736b312f168c3b2", "1", "", "", NULL, NULL);
 	}
 	else
 	{
-		cloud_data_append("d736b312f168c3b2", "0", "", "");
+		cloud_data_append("d736b312f168c3b2", "0", "", "", NULL, NULL);
 	}
 }
 
@@ -55,7 +60,7 @@ void ICACHE_FLASH_ATTR fetch_code_from_cloud()
 	os_sprintf(buf1, CLOUD_FETCH_URL, miid, security);
 	os_sprintf(buf0, HTTP_QUERY, buf1);
 
-	http_get(CLOUD_HOST, buf0, user_on_http_response);
+	http_get(CLOUD_HOST, buf0, user_on_http_response, NULL);
 }
 
 void ICACHE_FLASH_ATTR user_check_ip(uint8 reset_flag)
@@ -98,7 +103,7 @@ void ICACHE_FLASH_ATTR user_init(void)
     // rom use 74880 baut_rate, here reinitialize
     uart_init(BIT_RATE_115200, BIT_RATE_115200);
 
-	__printf("SDK version:%d.%d.%d\n", SDK_VERSION_MAJOR, SDK_VERSION_MINOR, SDK_VERSION_REVISION);
+	__printf("SDK version:%d.%d.%d free mem=%d\n", SDK_VERSION_MAJOR, SDK_VERSION_MINOR, SDK_VERSION_REVISION, system_get_free_heap_size());
 
 	SpiFlashOpResult succ = spi_flash_read(0x70000, buf, sizeof(buf));
 	os_printf("load %s: %s", succ == SPI_FLASH_RESULT_OK? "succ" : "fail", (char*)buf);

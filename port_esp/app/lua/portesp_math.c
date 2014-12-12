@@ -217,7 +217,15 @@ void ICACHE_FLASH_ATTR __tiny_fload_to_string(char *buf, const char *fmt, float 
     char * dtoa(char *s, double n);
     dtoa(buf, val);
 #else
-    os_sprintf(buf, "%d", (int)val);
+    int d = (int)( (val-(int)val)*1000 );
+    if (d == 0)
+    {
+        os_sprintf(buf, "%d", (int)val);
+    }
+    else
+    {
+        os_sprintf(buf, "%d.%03d", (int)val, d);
+    }
 #endif
 }
 

@@ -5,11 +5,8 @@
 */
 
 
-#include <errno.h>
-#include <locale.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <os_type.h>
+#include <gpio.h>
 
 #define loslib_c
 #define LUA_LIB

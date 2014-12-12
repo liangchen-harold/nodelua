@@ -24,7 +24,7 @@
 
 
 typedef struct {
-    os_timer_t *pCloud;
+	os_timer_t *pCloud;
 } Cloud;
 
 
@@ -93,15 +93,54 @@ int ICACHE_FLASH_ATTR lnode_cloud_gc(lua_State* L) {
     return 0;
 }
 
+static void ICACHE_FLASH_ATTR cloud_on_http_response(int status, char *data, void *arg)
+{
+    //__printf("resp 0x%08X\n", arg);
+    ref_t *ref = (ref_t*)arg;
+	if (ref != NULL)
+	{
+        lua_State *L = ref->L;
+        //get the callback
+        lua_rawgeti(L, LUA_REGISTRYINDEX, ref->r);
+
+        /* do the call (0 arguments, 0 result) */
+        if (lua_pcall(L, 0, 0, 0) != 0)
+        {
+            const char *msg = lua_tostring(L, -1);
+            if (msg == NULL) msg = "err2";
+            luaL_error(L, msg);
+            lua_pop(L, 1);
+        }
+
+        //free
+        luaL_unref(L, LUA_REGISTRYINDEX, ref->r);
+        os_free(ref);
+	}
+}
+
+
 static int ICACHE_FLASH_ATTR lnode_cloud_append (lua_State *L)
 {
     lua_checkself(L);
 
     lua_getfield(L, 1, "id");
     const char *id = luaL_checkstring(L, -1);
-    const char *v0 = luaL_checkstring(L, 2);
+    double v0 = luaL_checknumber(L, 2);
 
-    cloud_data_append(id, v0, "", "");
+    char buf[32];
+    os_sprintf(buf, "%d.%03d", (int)v0, (int)((v0-(int)v0)*1000));
+    //__printf("cloud:%s\n", buf);
+
+    ref_t *ref = NULL;
+    if (lua_isfunction(L, 3))
+    {
+        ref = (ref_t*)os_malloc(sizeof(ref_t));
+        ref->L = L;
+        lua_pushvalue(L, 3); /* Store the callback */
+        ref->r = luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+
+    cloud_data_append(id, buf, "", "", cloud_on_http_response, ref);
 
     // lua_getfield(L, 1, "rawcloud");
     // Cloud *s = (Cloud *)lua_touserdata(L, -1);

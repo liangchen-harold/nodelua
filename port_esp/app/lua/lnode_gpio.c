@@ -11,6 +11,7 @@
 #define loslib_c
 #define LUA_LIB
 
+#include "lua/lnode_gpio.h"
 #include "lua/lua.h"
 #include "lua/portesp.h"
 
@@ -27,12 +28,7 @@ enum Value {
     HIGH,
 };
 
-struct Pin
-{
-    uint32_t mux;
-    uint8_t func;
-};
-static const struct Pin pins[] = {
+const struct Pin pins[] = {
     {PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0},
     {PERIPHS_IO_MUX_U0TXD_U, FUNC_GPIO1}, //TXD
     {PERIPHS_IO_MUX_GPIO2_U, FUNC_GPIO2},

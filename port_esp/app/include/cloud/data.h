@@ -10,10 +10,10 @@
 #define CLOUD_APPEND_URL "/api/cloud/data/append?miid=%s&security=%s&tiid=%s&v0=%s&v1=%s&v2=%s"
 
 
-typedef void (* http_response_callback)(int status, char *data);
+typedef void (* http_response_callback)(int status, char *data, void *arg);
 
 
-void http_get (const char *host, char *send, http_response_callback cb);
-void cloud_data_append (const char *cloudid, const char *v0, const char *v1, const char *v2);
+void http_get (const char *host, char *send, http_response_callback cb, void *cb_arg);
+void cloud_data_append (const char *cloudid, const char *v0, const char *v1, const char *v2, http_response_callback cb, void *cb_arg);
 
 #endif

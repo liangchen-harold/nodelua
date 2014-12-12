@@ -17,6 +17,7 @@ int _active = 0;
 typedef struct {
 	char *buf;
 	http_response_callback cb;
+	void *cb_arg;
 } HttpReq;
 
 char * ICACHE_FLASH_ATTR http_parse_response(char *pdata, int *status)
@@ -64,7 +65,8 @@ static void ICACHE_FLASH_ATTR cloud_data_on_recv_cb(void *arg, char *pdata, unsi
 	HttpReq *req = pConn->reverse;
 	if (req->cb)
 	{
-		req->cb(status, res);
+		req->cb(status, res, req->cb_arg);
+		req->cb = NULL;
 	}
 
 	//TODO: concat more then one package
@@ -81,6 +83,13 @@ static void ICACHE_FLASH_ATTR cloud_data_on_discon_cb(void *arg)
     struct espconn *pConn = (struct espconn *)arg;
 
 	HttpReq *req = pConn->reverse;
+
+	if (req->cb)
+	{
+		req->cb(-1, NULL, req->cb_arg);
+		req->cb = NULL;
+	}
+
 	os_free(req->buf);
 	os_free(req);
 	os_free(pConn->proto.tcp);
@@ -136,7 +145,7 @@ static void ICACHE_FLASH_ATTR cloud_data_on_dns_found(const char *host, ip_addr_
 	}
 }
 
-void ICACHE_FLASH_ATTR http_get (const char *host, char *send, http_response_callback cb)
+void ICACHE_FLASH_ATTR http_get (const char *host, char *send, http_response_callback cb, void *cb_arg)
 {
 	struct espconn *pFetchConn;
 
@@ -144,6 +153,7 @@ void ICACHE_FLASH_ATTR http_get (const char *host, char *send, http_response_cal
 	req->buf = (char *)os_malloc(os_strlen(send)+1);
 	os_strcpy(req->buf, send);
 	req->cb = cb;
+	req->cb_arg = cb_arg;
 
     pFetchConn = (struct espconn *)os_zalloc(sizeof(struct espconn));
 	pFetchConn->reverse = req;
@@ -158,11 +168,11 @@ void ICACHE_FLASH_ATTR http_get (const char *host, char *send, http_response_cal
     espconn_gethostbyname(pFetchConn, host, &dummy_ip, cloud_data_on_dns_found);
 }
 
-void ICACHE_FLASH_ATTR cloud_data_append (const char *cloudid, const char *v0, const char *v1, const char *v2)
+void ICACHE_FLASH_ATTR cloud_data_append (const char *cloudid, const char *v0, const char *v1, const char *v2, http_response_callback cb, void *cb_arg)
 {
 	char buf0[512], buf1[512];
 	os_sprintf(buf1, CLOUD_APPEND_URL, miid, security, cloudid, v0, v1, v2);
 	os_sprintf(buf0, HTTP_QUERY, buf1);
 
-	http_get(CLOUD_HOST, buf0, NULL);
+	http_get(CLOUD_HOST, buf0, cb, cb_arg);
 }
