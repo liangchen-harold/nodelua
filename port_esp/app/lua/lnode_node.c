@@ -30,7 +30,23 @@ static int ICACHE_FLASH_ATTR lnode_node_wdt (lua_State *L)
     return 0;
 }
 
+static int ICACHE_FLASH_ATTR lnode_node_setid (lua_State *L)
+{
+	char buf0[512];
+    const char *id = luaL_checkstring(L, 1);
+    const char *sec = luaL_checkstring(L, 2);
+    os_sprintf(buf0, "%s;%s;", id, sec);
+    if (os_strlen(id) == 0)
+    {
+        os_memset(buf0, 0xff, sizeof(buf0));
+    }
+	user_params_set(buf0, sizeof(buf0));
+
+    return 0;
+}
+
 static const luaL_Reg lnode_node_lib[] = {
+  {"setid",         lnode_node_setid},
   {"free",          lnode_node_free},
   {"wdt",           lnode_node_wdt},
   {NULL, NULL}

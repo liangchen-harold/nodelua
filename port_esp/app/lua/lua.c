@@ -9,6 +9,8 @@
 //#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <os_type.h>
+#include "cloud/data.h"
 
 #define lua_c
 
@@ -486,15 +488,14 @@ int ICACHE_FLASH_ATTR luainit (const char *code)
         return EXIT_FAILURE;
     }
 
-
     struct Smain *s = (struct Smain *)lua_touserdata(L, 1);
     lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
-	__printf("Lua state loaded, free mem=%d\n", system_get_free_heap_size());
+	DEBUG_MSG("Lua state loaded, free mem=%d\n", system_get_free_heap_size());
     luaL_openlibs(L);  /* open libraries */
-	__printf("Lua libs loaded, free mem=%d\n", system_get_free_heap_size());
+	DEBUG_MSG("Lua libs loaded, free mem=%d\n", system_get_free_heap_size());
     lua_gc(L, LUA_GCRESTART, 0);
 
-    print_version();
+    //print_version();
 
     progname = NULL;
     const char *prmt = get_prompt(L, 1);

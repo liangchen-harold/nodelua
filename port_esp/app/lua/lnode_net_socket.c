@@ -41,7 +41,7 @@ static void ICACHE_FLASH_ATTR tcpclient_discon_cb(void *arg)
 {
     struct espconn *pConn = (struct espconn *)arg;
 
-    __printf("tcp client disconnect\n");
+    DEBUG_MSG("tcp client disconnect\n");
 }
 
 /**
@@ -83,7 +83,7 @@ static void ICACHE_FLASH_ATTR tcpclient_recv_cb(void *arg, char *pdata, unsigned
         lua_pop(L, 1);
     }
     lua_pop(L, 1);
-    // __printf("tcp client recv %d bytes\n", len);
+    // DEBUG_MSG("tcp client recv %d bytes\n", len);
 }
 
 /**
@@ -95,7 +95,7 @@ static void ICACHE_FLASH_ATTR tcpclient_connect_cb(void *arg)
 {
     struct espconn *pConn = (struct espconn *)arg;
 
-    __printf("tcp client connect\n");
+    DEBUG_MSG("tcp client connect\n");
 
     espconn_regist_disconcb(pConn, tcpclient_discon_cb);
     espconn_regist_recvcb(pConn, tcpclient_recv_cb);////////
@@ -133,7 +133,7 @@ static void ICACHE_FLASH_ATTR tcpclient_recon_cb(void *arg, sint8 errType)
 {
     struct espconn *pConn = (struct espconn *)arg;
 
-    __printf("tcp client reconnect\n");
+    DEBUG_MSG("tcp client reconnect\n");
 }
 
 int ICACHE_FLASH_ATTR lnode_net_socket_initialize(lua_State* L)
@@ -158,7 +158,7 @@ int ICACHE_FLASH_ATTR lnode_net_socket_initialize(lua_State* L)
     Socket *s = lua_newuserdata(L,sizeof(Socket));
     lua_setfield(L, 1, "rawsocket");
 
-    __printf("## net_socket:initialize udata=0x%08X\n", s);
+    DEBUG_MSG("## net_socket:initialize udata=0x%08X\n", s);
 
     s->pConn = (struct espconn *)os_zalloc(sizeof(struct espconn));
     if (protocol == TCP)
@@ -188,7 +188,7 @@ int ICACHE_FLASH_ATTR lnode_net_socket_initialize(lua_State* L)
 }
 
 int ICACHE_FLASH_ATTR lnode_net_socket_gc(lua_State* L) {
-    __printf("## __gc\n");
+    DEBUG_MSG("## __gc\n");
 
     lua_getfield(L, 1, "rawsocket");
     Socket *s = (Socket *)lua_touserdata(L, -1);
@@ -213,7 +213,7 @@ static void ICACHE_FLASH_ATTR on_dns_found_for_connect(const char *name, ip_addr
         char buf[16];
         char *p = (char*)&(ipaddr->addr);
         os_memcpy(pespconn->proto.tcp->remote_ip, &(ipaddr->addr), 4);
-        __printf("connection to "IPSTR"...\n", p[0], p[1], p[2], p[3]);
+        DEBUG_MSG("connection to "IPSTR"...\n", p[0], p[1], p[2], p[3]);
 
         espconn_connect(pespconn);
     }

@@ -11,6 +11,7 @@
 #include <mem.h>
 #include <osapi.h>
 #include <espconn.h>
+#include "cloud/data.h"
 
 #define loslib_c
 #define LUA_LIB
@@ -44,7 +45,7 @@ void ICACHE_FLASH_ATTR cloud_on_data_cb(void *arg)
         luaL_error(L, msg);
         lua_pop(L, 1);
     }
-    // __printf("tcp client recv %d bytes\n", len);
+    // DEBUG_MSG("tcp client recv %d bytes\n", len);
 }
 
 int ICACHE_FLASH_ATTR lnode_cloud_initialize(lua_State* L)
@@ -70,13 +71,13 @@ int ICACHE_FLASH_ATTR lnode_cloud_initialize(lua_State* L)
     Cloud *s = lua_newuserdata(L,sizeof(Cloud));
     lua_setfield(L, 1, "rawcloud");
 
-    __printf("## timer:initialize udata=0x%08X\n", s);
+    DEBUG_MSG("## timer:initialize udata=0x%08X\n", s);
 
     return 0;
 }
 
 int ICACHE_FLASH_ATTR lnode_cloud_gc(lua_State* L) {
-    __printf("## __gc\n");
+    DEBUG_MSG("## __gc\n");
 
     lua_getfield(L, 1, "rawcloud");
     // Socket *s = (Socket *)lua_touserdata(L, -1);
@@ -95,7 +96,7 @@ int ICACHE_FLASH_ATTR lnode_cloud_gc(lua_State* L) {
 
 static void ICACHE_FLASH_ATTR cloud_on_http_response(int status, char *data, void *arg)
 {
-    //__printf("resp 0x%08X\n", arg);
+    //DEBUG_MSG("resp 0x%08X\n", arg);
     ref_t *ref = (ref_t*)arg;
 	if (ref != NULL)
 	{
@@ -129,7 +130,7 @@ static int ICACHE_FLASH_ATTR lnode_cloud_append (lua_State *L)
 
     char buf[32];
     os_sprintf(buf, "%d.%03d", (int)v0, (int)((v0-(int)v0)*1000));
-    //__printf("cloud:%s\n", buf);
+    //DEBUG_MSG("cloud:%s\n", buf);
 
     ref_t *ref = NULL;
     if (lua_isfunction(L, 3))

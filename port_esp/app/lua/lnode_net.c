@@ -172,6 +172,7 @@ a:on("connect", function(data)
 end) a:connect(host, 80)
 a:connect() for i = 1,100 do print(i .. ":" .. node.free()) node.wdt() collectgarbage() end
 
-
+node.setid("6", "9eeec357d65a9ef4ef79e4473e96cb88")
+node.setid()
 
 */

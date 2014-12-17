@@ -14,6 +14,7 @@
 TARGET = eagle
 FLAVOR = release
 #FLAVOR = debug
+INTERNATIONAL = 1
 
 #EXTRA_CCFLAGS += -u
 
@@ -38,6 +39,10 @@ APPDIR = .
 LDDIR = ../ld
 
 CCFLAGS += -Os
+
+ifeq ($(INTERNATIONAL),1)
+	CCFLAGS += -DINTERNATIONAL
+endif
 
 TARGET_LDFLAGS =		\
 	-nostdlib		\
@@ -141,9 +146,14 @@ INCLUDES += -I ./
 PDIR := ../$(PDIR)
 sinclude $(PDIR)Makefile
 
-install: $(IMAGEODIR)/$(GEN_IMAGES)
+NODELUA := ../bin/nodelua_8266.fw
+$(NODELUA): all
 	./gen_misc.sh
-	../tools/esptool.py write_flash 0x00000 ../bin/eagle.app.v6.flash.bin 0x10000 ../bin/eagle.app.v6.irom0text.bin
+	../tools/gen_flashbin.py ../bin/eagle.app.v6.flash.bin ../bin/eagle.app.v6.irom0text.bin
+	mv eagle.app.flash.bin $(NODELUA)
+
+install: all $(NODELUA)
+	../tools/esptool.py write_flash 0x00000 $(NODELUA)
 
 #########################################################################
 #

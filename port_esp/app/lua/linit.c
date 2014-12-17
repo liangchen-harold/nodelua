@@ -28,8 +28,8 @@ static const luaL_Reg lualibs[] = {
   {"", luaopen_lnode_timer},
   {"", luaopen_lnode_cloud},
   {LUA_LNODE_SENSOR_NAME, luaopen_lnode_sensor},
-  //{LUA_LNODE_GPIO_NAME, luaopen_lnode_gpio},
-  //{LUA_LNODE_WIFI_NAME, luaopen_lnode_wifi},
+  {LUA_LNODE_GPIO_NAME, luaopen_lnode_gpio},
+  {LUA_LNODE_WIFI_NAME, luaopen_lnode_wifi},
   //{LUA_LNODE_NET_NAME, luaopen_lnode_net},
   {NULL, NULL}
 };

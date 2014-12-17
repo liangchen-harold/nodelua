@@ -11,6 +11,7 @@
 #include <mem.h>
 #include <osapi.h>
 #include <espconn.h>
+#include "cloud/data.h"
 
 #define loslib_c
 #define LUA_LIB
@@ -26,7 +27,7 @@ typedef struct {
 } Emitter;
 
 int ICACHE_FLASH_ATTR lnode_emitter_gc(lua_State* L) {
-    __printf("## emitter:__gc\n");
+    DEBUG_MSG("## emitter:__gc\n");
 
     //Emitter *s = (Emitter *)luaL_checkudata(L, 1, "Emitter.meta");
     return 0;
@@ -37,7 +38,7 @@ int ICACHE_FLASH_ATTR lnode_emitter_initialize(lua_State* L) {
     lua_newtable(L);
     lua_setfield(L, 1, "cb");
 
-    __printf("## emitter:initialize\n");
+    DEBUG_MSG("## emitter:initialize\n");
 
     // luaL_getmetatable(L, "Emitter.meta");
     // lua_setmetatable(L, -2);

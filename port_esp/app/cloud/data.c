@@ -11,6 +11,9 @@
 #include "cloud/data.h"
 
 
+char *_miid;
+char *_security;
+
 ip_addr_t dummy_ip;
 int _active = 0;
 
@@ -31,7 +34,7 @@ char * ICACHE_FLASH_ATTR http_parse_response(char *pdata, int *status)
 			int len = strtol(lenStr+4, NULL, 16);
 			char *code = lenStrEnd+2;
 			*(code+len) = 0;
-			__printf("http resp(len=%d):\n%s\n", len, code);
+			DEBUG_MSG("http resp(len=%d):\n%s\n", len, code);
 			*status = 200; //TODO:
 			return code;
 		}
@@ -96,14 +99,14 @@ static void ICACHE_FLASH_ATTR cloud_data_on_discon_cb(void *arg)
 	os_free(pConn);
 	_active --;
 
-    __printf("tcp client disconnect(active=%d)\n", _active);
+    DEBUG_MSG("tcp client disconnect(active=%d)\n", _active);
 }
 
 static void ICACHE_FLASH_ATTR cloud_data_on_recon_cb(void *arg, sint8 errType)
 {
     struct espconn *pConn = (struct espconn *)arg;
 
-    __printf("tcp client reconnect\n");
+    DEBUG_MSG("tcp client reconnect\n");
 }
 
 /**
@@ -116,7 +119,7 @@ static void ICACHE_FLASH_ATTR cloud_data_on_connect_cb(void *arg)
     struct espconn *pConn = (struct espconn *)arg;
 	HttpReq *req = pConn->reverse;
 
-    __printf("tcp client connect\n");
+    DEBUG_MSG("tcp client connect\n");
 
     espconn_regist_disconcb(pConn, cloud_data_on_discon_cb);
     espconn_regist_recvcb(pConn, cloud_data_on_recv_cb);////////
@@ -134,7 +137,7 @@ static void ICACHE_FLASH_ATTR cloud_data_on_dns_found(const char *host, ip_addr_
         char *p = (char*)&(ipaddr->addr);
         os_memcpy(pespconn->proto.tcp->remote_ip, &(ipaddr->addr), 4);
 		_active ++;
-        __printf("connection to "IPSTR"...(active=%d)\n", p[0], p[1], p[2], p[3], _active);
+        DEBUG_MSG("connection to "IPSTR"...(active=%d)\n", p[0], p[1], p[2], p[3], _active);
 
         espconn_connect(pespconn);
     }
@@ -171,7 +174,7 @@ void ICACHE_FLASH_ATTR http_get (const char *host, char *send, http_response_cal
 void ICACHE_FLASH_ATTR cloud_data_append (const char *cloudid, const char *v0, const char *v1, const char *v2, http_response_callback cb, void *cb_arg)
 {
 	char buf0[512], buf1[512];
-	os_sprintf(buf1, CLOUD_APPEND_URL, miid, security, cloudid, v0, v1, v2);
+	os_sprintf(buf1, CLOUD_APPEND_URL, _miid, _security, cloudid, v0, v1, v2);
 	os_sprintf(buf0, HTTP_QUERY, buf1);
 
 	http_get(CLOUD_HOST, buf0, cb, cb_arg);

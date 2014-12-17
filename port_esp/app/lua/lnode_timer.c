@@ -11,6 +11,7 @@
 #include <mem.h>
 #include <osapi.h>
 #include <espconn.h>
+#include "cloud/data.h"
 
 #define loslib_c
 #define LUA_LIB
@@ -44,7 +45,7 @@ void ICACHE_FLASH_ATTR timer_ontimer_cb(void *arg)
         luaL_error(L, msg);
         lua_pop(L, 1);
     }
-    // __printf("tcp client recv %d bytes\n", len);
+    // DEBUG_MSG("tcp client recv %d bytes\n", len);
 }
 
 int ICACHE_FLASH_ATTR lnode_timer_initialize(lua_State* L)
@@ -67,13 +68,13 @@ int ICACHE_FLASH_ATTR lnode_timer_initialize(lua_State* L)
     Timer *s = lua_newuserdata(L,sizeof(Timer));
     lua_setfield(L, 1, "rawtimer");
 
-    __printf("## timer:initialize udata=0x%08X\n", s);
+    DEBUG_MSG("## timer:initialize udata=0x%08X\n", s);
 
     return 0;
 }
 
 int ICACHE_FLASH_ATTR lnode_timer_gc(lua_State* L) {
-    __printf("## __gc\n");
+    DEBUG_MSG("## __gc\n");
 
     lua_getfield(L, 1, "rawtimer");
     // Socket *s = (Socket *)lua_touserdata(L, -1);
