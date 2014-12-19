@@ -5,7 +5,8 @@ NodeLua is a cross-platform firmware based on the lua language trying to make Io
 
 Major highlights:
 
-* A very easy to use web based IDE development environment. You can program and load codes into modules over-the-air, you can even do mass production of your product within the web IDE.
+* Access to all of the resources on the chip: GPIO, PWM, ADC, Timer, WIFI config, TCP server and client. Compile toolchain and the time wasting burning process are no longer needed.
+* A very easy to use web based IDE development environment. You can program and load codes into modules over-the-air.
 * Cloud APIs to storage the datas generating by the sensors on the modules(You can post data through only 2 lines of code!), to handle customer accounts, pairing, permissions, sharing devices with family and friends, control actions, triggers, timers send from customer’s phone or other sources.
 
 Known issues:
