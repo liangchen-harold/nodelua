@@ -35,4 +35,4 @@ Compile:
 
 Credits
 ===
-NodeLua was written by Harold L. and released under the GPLv3 license.
+NodeLua was written by Harold L. and released under the Apache License.
