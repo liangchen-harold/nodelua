@@ -15,7 +15,7 @@ Known issues:
 You are welcome to be a early bird and help us to improve it!
 
 
-Project site:
+Project site
 ===
 http://nodelua.org
 
