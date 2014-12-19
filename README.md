@@ -32,3 +32,7 @@ You can follow the tutorial to get start: http://nodelua.org/doc/tutorial/make-y
 Compile:
 
 //TODO: to be done
+
+Credits
+===
+NodeLua was written by Harold L. and released under the GPLv3 license.
