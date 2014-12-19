@@ -85,8 +85,23 @@ static int ICACHE_FLASH_ATTR lnode_gpio_write (lua_State *L)
     return 0;
 }
 
+static int ICACHE_FLASH_ATTR lnode_gpio_read (lua_State *L)
+{
+    int pin = luaL_checkinteger(L, 1);
+    if (check_pin(pin))
+    {
+        lua_pushinteger(L, GPIO_INPUT_GET(GPIO_ID_PIN(pin)));
+        return 1;
+    }
+    else
+    {
+        return luaL_error(L, "invalid pin");
+    }
+}
+
 static const luaL_Reg lnode_gpio_lib[] = {
   {"mode",          lnode_gpio_mode},
+  {"read",          lnode_gpio_read},
   {"write",         lnode_gpio_write},
   {NULL, NULL}
 };

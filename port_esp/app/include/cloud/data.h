@@ -12,7 +12,7 @@
 #define CLOUD_FETCH_URL "/api/module/code?miid=%s&security=%s"
 #define CLOUD_APPEND_URL "/api/cloud/data/append?miid=%s&security=%s&cloud_id=%s&v0=%s&v1=%s&v2=%s"
 
-#define NODELUA_RELEASE "1.0.20141217"
+#define NODELUA_RELEASE "1.0.20141219"
 #ifdef DEBUG
 #define DEBUG_MSG __printf
 #else

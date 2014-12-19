@@ -113,6 +113,7 @@ static int ICACHE_FLASH_ATTR lnode_wifi_sta_config (lua_State *L)
     config.bssid_set = 0;
 
     lua_pushboolean(L, wifi_station_set_config(&config));
+    wifi_station_set_auto_connect(1);
     wifi_station_connect();
     return 1;
 }
