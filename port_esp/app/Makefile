@@ -52,6 +52,7 @@ TARGET_LDFLAGS =		\
 
 ifeq ($(FLAVOR),debug)
     TARGET_LDFLAGS += -g -O2
+	CCFLAGS += -DDEBUG
 endif
 
 ifeq ($(FLAVOR),release)
@@ -148,7 +149,7 @@ sinclude $(PDIR)Makefile
 
 NODELUA := ../bin/nodelua_8266.fw
 $(NODELUA): all
-	./gen_misc.sh
+	FLAVOR=$(FLAVOR) ./gen_misc.sh
 	../tools/gen_flashbin.py ../bin/eagle.app.v6.flash.bin ../bin/eagle.app.v6.irom0text.bin
 	mv eagle.app.flash.bin $(NODELUA)
 
