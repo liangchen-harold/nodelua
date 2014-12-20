@@ -23,7 +23,16 @@ static int ICACHE_FLASH_ATTR lnode_node_free (lua_State *L)
     lua_pushinteger(L, system_get_free_heap_size());
     return 1;
 }
-
+static int ICACHE_FLASH_ATTR lnode_node_chipid (lua_State *L)
+{
+    lua_pushinteger(L, system_get_chip_id());
+    return 1;
+}
+static int ICACHE_FLASH_ATTR lnode_node_restart (lua_State *L)
+{
+   system_restart();
+    return 0;
+}
 static int ICACHE_FLASH_ATTR lnode_node_wdt (lua_State *L)
 {
     ets_wdt_restore();
@@ -49,6 +58,8 @@ static const luaL_Reg lnode_node_lib[] = {
   {"setid",         lnode_node_setid},
   {"free",          lnode_node_free},
   {"wdt",           lnode_node_wdt},
+  {"chipid",        lnode_node_chipid},
+  {"restart",        lnode_node_restart},
   {NULL, NULL}
 };
 
