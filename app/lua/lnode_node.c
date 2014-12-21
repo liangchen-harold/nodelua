@@ -33,6 +33,12 @@ static int ICACHE_FLASH_ATTR lnode_node_restart (lua_State *L)
    system_restart();
     return 0;
 }
+static int ICACHE_FLASH_ATTR lnode_node_dsleep (lua_State *L)
+{
+   int msDsleep = luaL_checkinteger(L, 1)*1000;
+   system_deep_sleep(msDsleep);
+   return 0;
+}
 static int ICACHE_FLASH_ATTR lnode_node_wdt (lua_State *L)
 {
     ets_wdt_restore();
@@ -60,6 +66,7 @@ static const luaL_Reg lnode_node_lib[] = {
   {"wdt",           lnode_node_wdt},
   {"chipid",        lnode_node_chipid},
   {"restart",        lnode_node_restart},
+  {"dsleep",        lnode_node_dsleep},
   {NULL, NULL}
 };
 
